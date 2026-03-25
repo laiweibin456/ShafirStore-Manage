@@ -261,8 +261,8 @@ INSERT INTO sys_role (role_name, role_key, description) VALUES
 -- 插入用户数据（密码是 123456 的 BCrypt 加密结果）
 -- 原始密码: 123456
 INSERT INTO sys_user (username, password, real_name, phone, role_id, status) VALUES
-('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt.zHKi', '系统管理员', '13800138000', 1, 1),
-('zhangsan', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt.zHKi', '张三', '13800138001', 2, 1);
+('admin', '123456', '系统管理员', '13800138000', 1, 1),
+('zhangsan', '123456', '张三', '13800138001', 2, 1);
 
 -- 插入商品分类数据
 INSERT INTO product_category (name, parent_id, sort_order, status) VALUES
