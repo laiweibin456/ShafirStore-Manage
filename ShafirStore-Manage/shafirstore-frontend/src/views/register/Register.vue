@@ -100,10 +100,6 @@
         <div class="register-link">
           已有账号？<a href="#" @click.prevent="goToLogin">立即登录</a>
         </div>
-
-        <div class="login-footer">
-          <p>默认账号：admin / 123456</p>
-        </div>
       </div>
     </div>
   </div>

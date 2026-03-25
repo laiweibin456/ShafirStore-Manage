@@ -67,10 +67,6 @@
         <div class="register-link">
           还没有账号？<a href="#" @click.prevent="goToRegister">立即注册</a>
         </div>
-
-        <div class="login-footer">
-          <p>默认账号：admin / 123456</p>
-        </div>
       </div>
     </div>
   </div>
@@ -90,8 +86,8 @@ const loginFormRef = ref(null)
 const loading = ref(false)
 
 const loginForm = reactive({
-  username: 'admin',
-  password: '123456'
+  username: '',
+  password: ''
 })
 
 const loginRules = {
