@@ -40,4 +40,23 @@ public class UserServiceImpl implements UserService {
         }
         return user;
     }
+
+    @Override
+    public boolean register(User user) {
+        return userRepository.insert(user) > 0;
+    }
+
+    @Override
+    public boolean existsByUsername(String username) {
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getUsername, username);
+        return userRepository.selectCount(wrapper) > 0;
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getEmail, email);
+        return userRepository.selectCount(wrapper) > 0;
+    }
 }

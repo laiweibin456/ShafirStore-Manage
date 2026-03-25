@@ -2,6 +2,7 @@ package com.shafir.store.controller;
 
 import com.shafir.store.common.dto.LoginRequest;
 import com.shafir.store.common.dto.LoginResponse;
+import com.shafir.store.common.dto.RegisterRequest;
 import com.shafir.store.common.exception.BusinessException;
 import com.shafir.store.common.result.Result;
 import com.shafir.store.common.result.ResultCode;
@@ -69,6 +70,41 @@ public class AuthController {
 
         log.info("用户登录成功: {}", request.getUsername());
         return Result.success(response);
+    }
+
+    @PostMapping("/register")
+    public Result<Void> register(@RequestBody @Valid RegisterRequest request) {
+        log.info("用户注册请求: {}", request.getUsername());
+
+        if (userService.existsByUsername(request.getUsername())) {
+            log.warn("用户名已存在: {}", request.getUsername());
+            return Result.error(ResultCode.USERNAME_EXISTS);
+        }
+
+        if (userService.existsByEmail(request.getEmail())) {
+            log.warn("邮箱已被注册: {}", request.getEmail());
+            return Result.error(ResultCode.EMAIL_EXISTS);
+        }
+
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
+            log.warn("两次输入的密码不一致");
+            return Result.error(ResultCode.PASSWORD_MISMATCH);
+        }
+
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setPassword(request.getPassword());
+        user.setEmail(request.getEmail());
+        user.setRoleId(2L);
+        user.setStatus(1);
+
+        if (userService.register(user)) {
+            log.info("用户注册成功: {}", request.getUsername());
+            return Result.success();
+        }
+
+        log.error("用户注册失败: {}", request.getUsername());
+        return Result.error(ResultCode.FAILED);
     }
 
     @PostMapping("/logout")

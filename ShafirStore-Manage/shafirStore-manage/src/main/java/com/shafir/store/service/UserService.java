@@ -9,4 +9,10 @@ public interface UserService {
     User getById(Long id);
 
     User getUserWithRole(Long id);
+
+    boolean register(User user);
+
+    boolean existsByUsername(String username);
+
+    boolean existsByEmail(String email);
 }

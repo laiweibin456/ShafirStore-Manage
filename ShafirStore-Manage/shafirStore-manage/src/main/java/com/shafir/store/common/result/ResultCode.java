@@ -14,6 +14,9 @@ public enum ResultCode {
     TOKEN_EXPIRED(401, "令牌已过期"),
     TOKEN_INVALID(401, "令牌无效"),
     ACCOUNT_DISABLED(403, "账号已被禁用"),
+    USERNAME_EXISTS(400, "用户名已存在"),
+    EMAIL_EXISTS(400, "邮箱已被注册"),
+    PASSWORD_MISMATCH(400, "两次输入的密码不一致"),
 
     PRODUCT_NOT_FOUND(404, "商品不存在"),
     PRODUCT_OFF_SHELF(400, "商品已下架"),

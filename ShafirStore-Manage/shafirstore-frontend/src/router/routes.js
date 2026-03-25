@@ -6,6 +6,12 @@ export default [
     meta: { title: '登录', requiresAuth: false }
   },
   {
+    path: '/register',
+    name: 'Register',
+    component: () => import('@/views/register/Register.vue'),
+    meta: { title: '注册', requiresAuth: false }
+  },
+  {
     path: '/',
     component: () => import('@/layout/Layout.vue'),
     redirect: '/home',
