@@ -70,9 +70,7 @@ CREATE TABLE sys_menu (
 DROP TABLE IF EXISTS product_category;
 CREATE TABLE product_category (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '分类ID',
-    parent_id BIGINT DEFAULT 0 COMMENT '父分类ID',
     name VARCHAR(50) NOT NULL COMMENT '分类名称',
-    icon VARCHAR(255) COMMENT '分类图标',
     sort_order INT DEFAULT 0 COMMENT '排序',
     status TINYINT DEFAULT 1 COMMENT '状态（0-禁用，1-正常）',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -263,38 +261,30 @@ INSERT INTO sys_user (username, password, real_name, phone, role_id, status) VAL
 ('admin', '123456', '系统管理员', '13800138000', 1, 1),
 ('zhangsan', '123456', '张三', '13800138001', 2, 1);
 
--- 插入商品分类数据
-INSERT INTO product_category (name, parent_id, sort_order, status) VALUES
-('蛋糕', 0, 1, 1),
-('面包', 0, 2, 1),
-('饼干', 0, 3, 1),
-('饮品', 0, 4, 1);
-
--- 插入蛋糕子分类
-INSERT INTO product_category (name, parent_id, sort_order, status) VALUES
-('生日蛋糕', 1, 1, 1),
-('慕斯蛋糕', 1, 2, 1),
-('芝士蛋糕', 1, 3, 1),
-('奶油蛋糕', 1, 4, 1);
-
--- 插入面包子分类
-INSERT INTO product_category (name, parent_id, sort_order, status) VALUES
-('吐司', 2, 1, 1),
-('法式面包', 2, 2, 1),
-('软欧包', 2, 3, 1);
+-- 插入商品分类数据（固定5个分类：蛋糕、面包、饼干、饮品、其他）
+INSERT INTO product_category (name, sort_order, status) VALUES
+('蛋糕', 1, 1),
+('面包', 2, 1),
+('饼干', 3, 1),
+('饮品', 4, 1),
+('其他', 5, 1);
 
 -- 插入商品数据
 INSERT INTO product (name, category_id, price, cost_price, unit, shelf_life_days, description, status) VALUES
-('草莓奶油蛋糕', 5, 168.00, 68.00, '个', 3, '新鲜草莓搭配动物奶油，精致美味', 1),
-('提拉米苏', 6, 88.00, 38.00, '个', 2, '经典意式甜点，咖啡风味', 1),
-('芒果慕斯', 6, 78.00, 32.00, '个', 2, '新鲜芒果制作，入口即化', 1),
-('原味芝士蛋糕', 7, 58.00, 25.00, '个', 3, '浓郁芝士，口感绵密', 1),
-('巧克力慕斯', 6, 68.00, 28.00, '个', 2, '纯正巧克力，丝滑享受', 1),
-('原味吐司', 8, 12.00, 5.00, '袋', 5, '柔软可口，早餐必备', 1),
-('红豆吐司', 8, 15.00, 6.50, '袋', 5, '香甜红豆，营养美味', 1),
-('法式长棍', 9, 8.00, 3.00, '根', 2, '正宗法式面包，外脆内软', 1),
+-- 蛋糕分类
+('草莓奶油蛋糕', 1, 168.00, 68.00, '个', 3, '新鲜草莓搭配动物奶油，精致美味', 1),
+('提拉米苏', 1, 88.00, 38.00, '个', 2, '经典意式甜点，咖啡风味', 1),
+('芒果慕斯', 1, 78.00, 32.00, '个', 2, '新鲜芒果制作，入口即化', 1),
+('原味芝士蛋糕', 1, 58.00, 25.00, '个', 3, '浓郁芝士，口感绵密', 1),
+('巧克力慕斯', 1, 68.00, 28.00, '个', 2, '纯正巧克力，丝滑享受', 1),
+-- 面包分类
+('原味吐司', 2, 12.00, 5.00, '袋', 5, '柔软可口，早餐必备', 1),
+('红豆吐司', 2, 15.00, 6.50, '袋', 5, '香甜红豆，营养美味', 1),
+('法式长棍', 2, 8.00, 3.00, '根', 2, '正宗法式面包，外脆内软', 1),
+-- 饼干分类
 ('黄油曲奇', 3, 28.00, 12.00, '盒', 30, '手工黄油曲奇，酥脆香甜', 1),
 ('蔓越莓饼干', 3, 32.00, 14.00, '盒', 30, '酸甜蔓越莓，口感丰富', 1),
+-- 饮品分类
 ('拿铁咖啡', 4, 22.00, 8.00, '杯', 1, '香浓拿铁，丝滑口感', 1),
 ('珍珠奶茶', 4, 18.00, 6.00, '杯', 1, 'Q弹珍珠，经典奶茶', 1);
 

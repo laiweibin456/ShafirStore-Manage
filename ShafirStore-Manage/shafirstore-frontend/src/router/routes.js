@@ -22,6 +22,12 @@ export default [
         name: 'UserManage',
         component: () => import('@/views/system/UserManage.vue'),
         meta: { title: '用户管理', requiresAuth: true }
+      },
+      {
+        path: 'product',
+        name: 'ProductManage',
+        component: () => import('@/views/product/ProductManage.vue'),
+        meta: { title: '商品管理', requiresAuth: true }
       }
     ]
   }
