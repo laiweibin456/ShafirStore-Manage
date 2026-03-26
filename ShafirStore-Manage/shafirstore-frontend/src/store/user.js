@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+import { defineStore } from '../../node_modules/pinia/dist/pinia.mjs'
 import { login, logout, getCurrentUser } from '@/api/auth'
 
 export const useUserStore = defineStore('user', {
