@@ -31,29 +31,35 @@
             <el-icon><HomeFilled /></el-icon>
             <span>首页</span>
           </el-menu-item>
+
           <el-menu-item index="/product">
             <el-icon><Goods /></el-icon>
             <span>商品管理</span>
           </el-menu-item>
+
           <el-menu-item index="/inventory">
             <el-icon><Box /></el-icon>
             <span>库存管理</span>
           </el-menu-item>
+
           <el-menu-item index="/sale">
             <el-icon><Sell /></el-icon>
             <span>销售管理</span>
           </el-menu-item>
-          <el-menu-item index="/member">
+
+          <el-menu-item v-if="userStore.isAdmin" index="/member">
             <el-icon><User /></el-icon>
             <span>会员管理</span>
           </el-menu-item>
-          <el-menu-item index="/statistics">
+
+          <el-menu-item v-if="userStore.isAdmin" index="/statistics">
             <el-icon><DataAnalysis /></el-icon>
             <span>统计分析</span>
           </el-menu-item>
-          <el-menu-item index="/system">
+
+          <el-menu-item v-if="userStore.isAdmin" index="/system/user">
             <el-icon><Setting /></el-icon>
-            <span>系统管理</span>
+            <span>用户管理</span>
           </el-menu-item>
         </el-menu>
       </el-aside>
@@ -66,7 +72,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { ElMessage } from 'element-plus'

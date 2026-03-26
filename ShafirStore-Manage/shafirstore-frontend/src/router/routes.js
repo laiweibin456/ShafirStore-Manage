@@ -22,6 +22,12 @@ export default [
         name: 'Home',
         component: () => import('@/views/home/Home.vue'),
         meta: { title: '首页', requiresAuth: true }
+      },
+      {
+        path: 'system/user',
+        name: 'UserManage',
+        component: () => import('@/views/system/UserManage.vue'),
+        meta: { title: '用户管理', requiresAuth: true }
       }
     ]
   }

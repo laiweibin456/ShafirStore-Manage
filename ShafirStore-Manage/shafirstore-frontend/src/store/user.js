@@ -1,4 +1,4 @@
-import { defineStore } from '../../node_modules/pinia/dist/pinia.mjs'
+import { defineStore } from 'pinia'
 import { login, logout, getCurrentUser } from '@/api/auth'
 
 export const useUserStore = defineStore('user', {
@@ -12,7 +12,8 @@ export const useUserStore = defineStore('user', {
     username: (state) => state.userInfo?.username || '',
     realName: (state) => state.userInfo?.realName || '',
     roleName: (state) => state.userInfo?.roleName || '',
-    roleKey: (state) => state.userInfo?.roleKey || ''
+    roleKey: (state) => state.userInfo?.roleKey || '',
+    isAdmin: (state) => state.userInfo?.roleKey === 'ROLE_ADMIN'
   },
 
   actions: {

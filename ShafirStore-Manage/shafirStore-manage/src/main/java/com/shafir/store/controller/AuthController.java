@@ -7,7 +7,6 @@ import com.shafir.store.common.exception.BusinessException;
 import com.shafir.store.common.result.Result;
 import com.shafir.store.common.result.ResultCode;
 import com.shafir.store.common.utils.JwtUtil;
-import com.shafir.store.common.utils.PasswordEncoderUtil;
 import com.shafir.store.entity.User;
 import com.shafir.store.service.UserService;
 import jakarta.validation.Valid;
@@ -25,12 +24,10 @@ public class AuthController {
 
     private final UserService userService;
     private final JwtUtil jwtUtil;
-    private final PasswordEncoderUtil passwordEncoderUtil;
 
     @PostMapping("/login")
     public Result<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
         log.info("用户登录请求: {}", request.getUsername());
-        log.info("输入密码: {}", request.getPassword());
 
         User user = userService.getByUsername(request.getUsername());
         if (user == null) {
@@ -38,10 +35,7 @@ public class AuthController {
             return Result.error(ResultCode.USERNAME_PASSWORD_ERROR);
         }
 
-        log.info("数据库密码: {}", user.getPassword());
         boolean passwordMatch = request.getPassword().equals(user.getPassword());
-        log.info("密码比较结果: {}", passwordMatch);
-
         if (!passwordMatch) {
             log.warn("密码错误: {}", request.getUsername());
             return Result.error(ResultCode.USERNAME_PASSWORD_ERROR);

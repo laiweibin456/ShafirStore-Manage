@@ -258,7 +258,7 @@ INSERT INTO sys_role (role_name, role_key, description) VALUES
 ('店长', 'ROLE_ADMIN', '拥有全部权限'),
 ('店员', 'ROLE_CLERK', '拥有基础操作权限');
 
--- 插入用户数据（密码是 123456 的 BCrypt 加密结果）
+-- 插入用户数据
 -- 原始密码: 123456
 INSERT INTO sys_user (username, password, real_name, phone, role_id, status) VALUES
 ('admin', '123456', '系统管理员', '13800138000', 1, 1),
