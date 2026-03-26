@@ -38,7 +38,4 @@ public class User implements Serializable {
     private LocalDateTime createTime;
 
     private LocalDateTime updateTime;
-
-    @TableLogic
-    private Integer deleted;
 }

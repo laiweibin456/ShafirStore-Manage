@@ -88,7 +88,7 @@ public class UserServiceImpl implements UserService {
             wrapper.eq(User::getStatus, status);
         }
 
-        wrapper.orderByDesc(User::getCreateTime);
+        wrapper.orderByAsc(User::getId);
         IPage<User> resultPage = userRepository.selectPage(page, wrapper);
 
         for (User user : resultPage.getRecords()) {
@@ -128,6 +128,8 @@ public class UserServiceImpl implements UserService {
         if (user.getStatus() == null) {
             user.setStatus(1);
         }
+        Long maxId = userRepository.getMaxId();
+        user.setId(maxId + 1);
         return userRepository.insert(user) > 0;
     }
 
