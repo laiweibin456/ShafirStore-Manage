@@ -63,10 +63,6 @@
             </el-button>
           </el-form-item>
         </el-form>
-
-        <div class="register-link">
-          还没有账号？<a href="#" @click.prevent="goToRegister">立即注册</a>
-        </div>
       </div>
     </div>
   </div>
@@ -115,10 +111,6 @@ const handleLogin = async () => {
       loading.value = false
     }
   })
-}
-
-const goToRegister = () => {
-  router.push('/register')
 }
 
 const showSuccessDialog = () => {
@@ -406,23 +398,6 @@ const showErrorDialog = (error) => {
   text-align: center;
   font-size: 14px;
   color: #64748b;
-}
-
-.register-link {
-  margin-top: 25px;
-  font-size: 14px;
-  color: #64748b;
-  text-align: center;
-}
-
-.register-link a {
-  color: #1e40af;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.register-link a:hover {
-  text-decoration: underline;
 }
 
 @media (max-width: 768px) {
