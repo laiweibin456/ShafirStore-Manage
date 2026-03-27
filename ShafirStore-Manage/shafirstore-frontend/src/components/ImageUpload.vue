@@ -43,7 +43,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Delete, Plus, Loading } from '@element-plus/icons-vue'
 import { uploadImage, deleteImage } from '@/api/upload'
@@ -73,6 +73,11 @@ const uploadUrl = computed(() => `${import.meta.env.VITE_API_BASE_URL || '/api'}
 const imageUrl = ref(props.modelValue)
 const uploading = ref(false)
 const uploadProgress = ref(0)
+
+watch(() => props.modelValue, (newVal) => {
+  imageUrl.value = newVal || ''
+})
+
 const headers = computed(() => {
   const token = localStorage.getItem('token')
   return token ? { Authorization: `Bearer ${token}` } : {}
