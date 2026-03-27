@@ -35,8 +35,7 @@ public class AuthController {
             return Result.error(ResultCode.USERNAME_PASSWORD_ERROR);
         }
 
-        boolean passwordMatch = request.getPassword().equals(user.getPassword());
-        if (!passwordMatch) {
+        if (!request.getPassword().equals(user.getPassword())) {
             log.warn("密码错误: {}", request.getUsername());
             return Result.error(ResultCode.USERNAME_PASSWORD_ERROR);
         }

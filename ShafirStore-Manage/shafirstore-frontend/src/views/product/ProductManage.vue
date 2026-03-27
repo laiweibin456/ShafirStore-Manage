@@ -193,7 +193,7 @@
           <el-input-number v-model="form.shelfLifeDays" :min="0" :controls="false" style="width: 100%" />
         </el-form-item>
         <el-form-item label="商品图片">
-          <el-input v-model="form.imageUrl" placeholder="请输入图片URL" />
+          <ImageUpload v-model="form.imageUrl" placeholder="点击上传商品图片" />
         </el-form-item>
         <el-form-item label="商品描述">
           <el-input v-model="form.description" type="textarea" :rows="3" placeholder="请输入商品描述" />
@@ -219,6 +219,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getProductList, addProduct, updateProduct, deleteProduct, updateProductStatus } from '@/api/product'
 import { getAllCategories } from '@/api/category'
+import ImageUpload from '@/components/ImageUpload.vue'
 
 const loading = ref(false)
 const loadingBtn = ref(false)
