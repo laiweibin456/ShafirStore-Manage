@@ -28,6 +28,36 @@ export default [
         name: 'ProductManage',
         component: () => import('@/views/product/ProductManage.vue'),
         meta: { title: '商品管理', requiresAuth: true }
+      },
+      {
+        path: 'inventory',
+        name: 'InventoryList',
+        component: () => import('@/views/inventory/InventoryList.vue'),
+        meta: { title: '库存管理', requiresAuth: true }
+      },
+      {
+        path: 'inventory/in',
+        name: 'StockIn',
+        component: () => import('@/views/inventory/StockIn.vue'),
+        meta: { title: '商品入库', requiresAuth: true }
+      },
+      {
+        path: 'inventory/out',
+        name: 'StockOut',
+        component: () => import('@/views/inventory/StockOut.vue'),
+        meta: { title: '商品出库', requiresAuth: true }
+      },
+      {
+        path: 'inventory/records',
+        name: 'InventoryRecords',
+        component: () => import('@/views/inventory/InventoryRecords.vue'),
+        meta: { title: '库存记录', requiresAuth: true }
+      },
+      {
+        path: 'inventory/alerts',
+        name: 'InventoryAlerts',
+        component: () => import('@/views/inventory/InventoryAlerts.vue'),
+        meta: { title: '库存预警', requiresAuth: true }
       }
     ]
   }

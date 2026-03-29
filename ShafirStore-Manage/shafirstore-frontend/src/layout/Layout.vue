@@ -37,10 +37,32 @@
             <span>商品管理</span>
           </el-menu-item>
 
-          <el-menu-item index="/inventory">
-            <el-icon><Box /></el-icon>
-            <span>库存管理</span>
-          </el-menu-item>
+          <el-sub-menu index="/inventory">
+            <template #title>
+              <el-icon><Box /></el-icon>
+              <span>库存管理</span>
+            </template>
+            <el-menu-item index="/inventory">
+              <el-icon><List /></el-icon>
+              <span>库存列表</span>
+            </el-menu-item>
+            <el-menu-item index="/inventory/in">
+              <el-icon><Top /></el-icon>
+              <span>商品入库</span>
+            </el-menu-item>
+            <el-menu-item index="/inventory/out">
+              <el-icon><Bottom /></el-icon>
+              <span>商品出库</span>
+            </el-menu-item>
+            <el-menu-item index="/inventory/records">
+              <el-icon><Document /></el-icon>
+              <span>库存记录</span>
+            </el-menu-item>
+            <el-menu-item index="/inventory/alerts">
+              <el-icon><Warning /></el-icon>
+              <span>库存预警</span>
+            </el-menu-item>
+          </el-sub-menu>
 
           <el-menu-item index="/sale">
             <el-icon><Sell /></el-icon>
@@ -76,7 +98,7 @@ import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { ElMessage } from 'element-plus'
-import { HomeFilled, Goods, Box, Sell, User, DataAnalysis, Setting, Avatar } from '@element-plus/icons-vue'
+import { HomeFilled, Goods, Box, Sell, User, DataAnalysis, Setting, Avatar, List, Top, Bottom, Document, Warning } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
