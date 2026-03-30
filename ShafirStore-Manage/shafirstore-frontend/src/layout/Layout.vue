@@ -64,10 +64,20 @@
             </el-menu-item>
           </el-sub-menu>
 
-          <el-menu-item index="/sale">
-            <el-icon><Sell /></el-icon>
-            <span>销售管理</span>
-          </el-menu-item>
+          <el-sub-menu index="/sale">
+            <template #title>
+              <el-icon><Sell /></el-icon>
+              <span>销售管理</span>
+            </template>
+            <el-menu-item index="/sale">
+              <el-icon><ShoppingCart /></el-icon>
+              <span>收银台</span>
+            </el-menu-item>
+            <el-menu-item index="/sale/order">
+              <el-icon><Document /></el-icon>
+              <span>订单管理</span>
+            </el-menu-item>
+          </el-sub-menu>
 
           <el-menu-item v-if="userStore.isAdmin" index="/member">
             <el-icon><User /></el-icon>
@@ -98,7 +108,7 @@ import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { ElMessage } from 'element-plus'
-import { HomeFilled, Goods, Box, Sell, User, DataAnalysis, Setting, Avatar, List, Top, Bottom, Document, Warning } from '@element-plus/icons-vue'
+import { HomeFilled, Goods, Box, Sell, User, DataAnalysis, Setting, Avatar, List, Top, Bottom, Document, Warning, ShoppingCart } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()

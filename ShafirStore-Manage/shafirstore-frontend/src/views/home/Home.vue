@@ -20,13 +20,24 @@
           </div>
           <div class="stat-info">
             <p class="stat-label">今日订单</p>
-            <p class="stat-value">{{ stats.todayOrders }}</p>
+            <p class="stat-value">{{ stats.todayOrders }} 单</p>
           </div>
         </el-card>
       </el-col>
       <el-col :span="6">
         <el-card class="stat-card">
           <div class="stat-icon" style="background: #e6a23c">
+            <el-icon><Coin /></el-icon>
+          </div>
+          <div class="stat-info">
+            <p class="stat-label">今日销售额</p>
+            <p class="stat-value">¥{{ stats.todaySales }}</p>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="6">
+        <el-card class="stat-card">
+          <div class="stat-icon" style="background: #9b59b6">
             <el-icon><User /></el-icon>
           </div>
           <div class="stat-info">
@@ -78,17 +89,32 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Goods, Sell, User, Warning } from '@element-plus/icons-vue'
+import { Goods, Sell, User, Warning, Coin } from '@element-plus/icons-vue'
+import { getTodayOrderCount, getTodaySalesAmount } from '@/api/order'
 
 const stats = ref({
   productCount: 12,
   todayOrders: 0,
+  todaySales: 0,
   memberCount: 3,
   alertCount: 0
 })
 
+const fetchStats = async () => {
+  try {
+    const [orderCountRes, salesRes] = await Promise.all([
+      getTodayOrderCount(),
+      getTodaySalesAmount()
+    ])
+    stats.value.todayOrders = orderCountRes.data || 0
+    stats.value.todaySales = salesRes.data || 0
+  } catch (error) {
+    console.error('获取今日数据失败', error)
+  }
+}
+
 onMounted(() => {
-  console.log('首页加载完成')
+  fetchStats()
 })
 </script>
 

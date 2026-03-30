@@ -58,6 +58,18 @@ export default [
         name: 'InventoryAlerts',
         component: () => import('@/views/inventory/InventoryAlerts.vue'),
         meta: { title: '库存预警', requiresAuth: true }
+      },
+      {
+        path: 'sale',
+        name: 'POS',
+        component: () => import('@/views/sale/POS.vue'),
+        meta: { title: '收银台', requiresAuth: true }
+      },
+      {
+        path: 'sale/order',
+        name: 'OrderList',
+        component: () => import('@/views/sale/OrderList.vue'),
+        meta: { title: '订单管理', requiresAuth: true }
       }
     ]
   }
