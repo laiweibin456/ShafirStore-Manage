@@ -223,7 +223,8 @@ const getPayTypeName = (type) => {
     1: '现金',
     2: '微信',
     3: '支付宝',
-    4: '会员卡'
+    4: '会员卡',
+    5: '积分兑换'
   }
   return map[type] || '-'
 }

@@ -35,13 +35,18 @@ public class OrderController {
         Long memberId = params.get("memberId") != null ? Long.valueOf(params.get("memberId").toString()) : null;
         Integer payType = Integer.valueOf(params.get("payType").toString());
         String remark = (String) params.get("remark");
+        Integer pointsEarned = params.get("pointsEarned") != null ?
+                Integer.valueOf(params.get("pointsEarned").toString()) : null;
+        Integer pointsDeduct = params.get("pointsDeduct") != null ?
+                Integer.valueOf(params.get("pointsDeduct").toString()) : null;
 
         Long operatorId = getCurrentUserId();
 
-        log.info("创建订单: productIds={}, quantities={}, memberId={}, payType={}",
-                productIds, quantities, memberId, payType);
+        log.info("创建订单: productIds={}, quantities={}, memberId={}, payType={}, pointsEarned={}, pointsDeduct={}",
+                productIds, quantities, memberId, payType, pointsEarned, pointsDeduct);
 
-        Order order = orderService.createOrder(productIds, quantities, memberId, payType, operatorId, remark);
+        Order order = orderService.createOrder(productIds, quantities, memberId, payType, operatorId, remark,
+                pointsEarned, pointsDeduct);
         return Result.success(order);
     }
 

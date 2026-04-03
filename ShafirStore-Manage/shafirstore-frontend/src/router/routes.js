@@ -70,6 +70,12 @@ export default [
         name: 'OrderList',
         component: () => import('@/views/sale/OrderList.vue'),
         meta: { title: '订单管理', requiresAuth: true }
+      },
+      {
+        path: 'member',
+        name: 'MemberManage',
+        component: () => import('@/views/member/MemberManage.vue'),
+        meta: { title: '会员管理', requiresAuth: true }
       }
     ]
   }

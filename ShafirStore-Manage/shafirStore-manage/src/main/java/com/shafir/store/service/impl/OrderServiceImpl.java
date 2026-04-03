@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -30,11 +31,23 @@ public class OrderServiceImpl implements OrderService {
     private final ProductRepository productRepository;
     private final InventoryService inventoryService;
     private final UserRepository userRepository;
+    private final MemberRepository memberRepository;
+    private final MemberPointsRecordRepository memberPointsRecordRepository;
+
+    private static final Map<Integer, BigDecimal> DISCOUNT_MAP = Map.of(
+            1, new BigDecimal("0.95"),
+            2, new BigDecimal("0.90"),
+            3, new BigDecimal("0.85"),
+            4, new BigDecimal("0.80")
+    );
+
+    private static final BigDecimal BIRTHDAY_DISCOUNT = new BigDecimal("0.30");
+    private static final BigDecimal MIN_DISCOUNT = new BigDecimal("0.50");
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Order createOrder(List<Long> productIds, List<Integer> quantities, Long memberId,
-                            Integer payType, Long operatorId, String remark) {
+                            Integer payType, Long operatorId, String remark, Integer pointsEarned, Integer pointsDeduct) {
         if (productIds == null || productIds.isEmpty()) {
             throw new BusinessException("请选择商品");
         }
@@ -95,6 +108,33 @@ public class OrderServiceImpl implements OrderService {
         order.setPayAmount(totalAmount);
         order.setPointsDiscount(BigDecimal.ZERO);
 
+        Member member = null;
+        if (payType == 5 && memberId != null && pointsDeduct != null && pointsDeduct > 0) {
+            member = memberRepository.selectById(memberId);
+            if (member == null) {
+                throw new BusinessException("会员不存在");
+            }
+            if (member.getPoints() < pointsDeduct) {
+                throw new BusinessException("积分不足，当前积分：" + member.getPoints() + "，需要：" + pointsDeduct);
+            }
+            order.setTotalAmount(BigDecimal.ZERO);
+            order.setDiscountAmount(totalAmount);
+            order.setPayAmount(BigDecimal.ZERO);
+            order.setPointsDiscount(BigDecimal.valueOf(pointsDeduct));
+        } else if (memberId != null && payType == 4) {
+            member = memberRepository.selectById(memberId);
+            if (member != null) {
+                BigDecimal discountRate = calculateDiscountRate(member);
+                BigDecimal discountAmount = totalAmount.multiply(BigDecimal.ONE.subtract(discountRate))
+                        .setScale(2, RoundingMode.HALF_UP);
+                BigDecimal payAmount = totalAmount.multiply(discountRate)
+                        .setScale(2, RoundingMode.HALF_UP);
+
+                order.setDiscountAmount(discountAmount);
+                order.setPayAmount(payAmount);
+            }
+        }
+
         orderRepository.insert(order);
 
         for (OrderItem item : orderItems) {
@@ -110,7 +150,68 @@ public class OrderServiceImpl implements OrderService {
             );
         }
 
+        if (payType == 5 && member != null && pointsDeduct != null && pointsDeduct > 0) {
+            int newPoints = member.getPoints() - pointsDeduct;
+            member.setPoints(newPoints);
+            if (member.getTotalConsume() == null) {
+                member.setTotalConsume(BigDecimal.ZERO);
+            }
+            member.setTotalConsume(member.getTotalConsume().add(totalAmount));
+            member.setUpdateTime(LocalDateTime.now());
+            memberRepository.updateById(member);
+
+            MemberPointsRecord pointsRecord = new MemberPointsRecord();
+            pointsRecord.setMemberId(member.getId());
+            pointsRecord.setType(2);
+            pointsRecord.setPoints(pointsDeduct);
+            pointsRecord.setBalance(newPoints);
+            pointsRecord.setOrderId(order.getId());
+            pointsRecord.setRemark("积分兑换商品");
+            pointsRecord.setCreateTime(LocalDateTime.now());
+            memberPointsRecordRepository.insert(pointsRecord);
+        } else if (member != null && payType == 4) {
+            int earnedPoints = order.getPayAmount().divide(BigDecimal.TEN, 0, RoundingMode.DOWN).intValue();
+            if (earnedPoints > 0) {
+                int newPoints = member.getPoints() + earnedPoints;
+                member.setPoints(newPoints);
+                if (member.getTotalConsume() == null) {
+                    member.setTotalConsume(BigDecimal.ZERO);
+                }
+                member.setTotalConsume(member.getTotalConsume().add(order.getPayAmount()));
+                member.setUpdateTime(LocalDateTime.now());
+                memberRepository.updateById(member);
+
+                MemberPointsRecord pointsRecord = new MemberPointsRecord();
+                pointsRecord.setMemberId(member.getId());
+                pointsRecord.setType(1);
+                pointsRecord.setPoints(earnedPoints);
+                pointsRecord.setBalance(newPoints);
+                pointsRecord.setOrderId(order.getId());
+                pointsRecord.setRemark("会员消费获得积分");
+                pointsRecord.setCreateTime(LocalDateTime.now());
+                memberPointsRecordRepository.insert(pointsRecord);
+            }
+        }
+
         return getOrderDetail(order.getId());
+    }
+
+    private BigDecimal calculateDiscountRate(Member member) {
+        Integer level = member.getLevel() != null ? member.getLevel() : 1;
+        BigDecimal discountRate = DISCOUNT_MAP.getOrDefault(level, new BigDecimal("0.95"));
+
+        if (member.getBirthday() != null) {
+            LocalDate today = LocalDate.now();
+            if (member.getBirthday().getMonth() == today.getMonth()
+                    && member.getBirthday().getDayOfMonth() == today.getDayOfMonth()) {
+                discountRate = discountRate.subtract(BIRTHDAY_DISCOUNT);
+                if (discountRate.compareTo(MIN_DISCOUNT) < 0) {
+                    discountRate = MIN_DISCOUNT;
+                }
+            }
+        }
+
+        return discountRate;
     }
 
     @Override
