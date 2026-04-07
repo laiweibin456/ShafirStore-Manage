@@ -208,6 +208,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { Box, Goods, Warning, Money } from '@element-plus/icons-vue'
 import { getInventoryList, stockIn, stockOut, adjustStock, getInventoryStatistics } from '@/api/inventory'
 import { useRouter } from 'vue-router'
 
