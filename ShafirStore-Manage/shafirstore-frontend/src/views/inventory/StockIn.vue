@@ -96,6 +96,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
+import { Check, ArrowLeft } from '@element-plus/icons-vue'
 import { getProductList } from '@/api/product'
 import { stockIn, getInventoryList } from '@/api/inventory'
 

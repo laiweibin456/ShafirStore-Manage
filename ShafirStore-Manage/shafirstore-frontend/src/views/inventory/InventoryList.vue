@@ -8,11 +8,14 @@
         <el-input
           v-model="searchKeyword"
           placeholder="搜索商品名称..."
-          prefix-icon="Search"
           clearable
           class="search-input"
           @input="handleSearch"
-        />
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
         <el-button type="primary" @click="handleStockIn">
           <el-icon><Plus /></el-icon>
           入库
@@ -208,7 +211,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Box, Goods, Warning, Money } from '@element-plus/icons-vue'
+import { Box, Goods, Warning, Money, Search, Plus, Minus, Document } from '@element-plus/icons-vue'
 import { getInventoryList, stockIn, stockOut, adjustStock, getInventoryStatistics } from '@/api/inventory'
 import { useRouter } from 'vue-router'
 

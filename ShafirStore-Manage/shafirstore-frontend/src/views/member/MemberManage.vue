@@ -8,11 +8,14 @@
         <el-input
           v-model="searchKeyword"
           placeholder="搜索姓名/手机号..."
-          prefix-icon="Search"
           clearable
           class="search-input"
           @input="handleSearch"
-        />
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
         <el-button type="primary" @click="handleAdd">
           <el-icon><Plus /></el-icon>
           新增会员
@@ -279,7 +282,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { User, UserFilled, Coin, Money, Plus } from '@element-plus/icons-vue'
+import { User, UserFilled, Coin, Money, Plus, Search } from '@element-plus/icons-vue'
 import { getMemberList, addMember, updateMember, updateMemberStatus, deleteMember, updatePoints } from '@/api/member'
 
 const loading = ref(false)

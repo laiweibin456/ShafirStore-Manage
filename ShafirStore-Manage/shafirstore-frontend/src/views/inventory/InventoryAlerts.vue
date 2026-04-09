@@ -94,6 +94,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { ArrowLeft, Refresh } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import { getLowStockAlerts, updateAlertThreshold } from '@/api/inventory'
 

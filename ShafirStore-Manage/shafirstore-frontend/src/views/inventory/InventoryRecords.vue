@@ -80,6 +80,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { Search, Refresh, ArrowLeft } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import { getInventoryRecords } from '@/api/inventory'
 

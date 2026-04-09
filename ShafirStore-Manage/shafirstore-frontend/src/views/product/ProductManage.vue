@@ -8,11 +8,14 @@
         <el-input
           v-model="searchKeyword"
           placeholder="搜索商品名称..."
-          prefix-icon="Search"
           clearable
           class="search-input"
           @input="handleSearch"
-        />
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
         <el-button type="primary" @click="handleAdd">
           <el-icon><Plus /></el-icon>
           新增商品
@@ -217,6 +220,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Search, Plus } from '@element-plus/icons-vue'
 import { getProductList, addProduct, updateProduct, deleteProduct, updateProductStatus } from '@/api/product'
 import { getAllCategories } from '@/api/category'
 import ImageUpload from '@/components/ImageUpload.vue'

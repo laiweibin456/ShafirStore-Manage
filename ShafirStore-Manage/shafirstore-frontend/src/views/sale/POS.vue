@@ -8,11 +8,14 @@
             <el-input
               v-model="searchKeyword"
               placeholder="搜索商品..."
-              prefix-icon="Search"
               clearable
               style="width: 240px"
               @input="handleSearch"
-            />
+            >
+              <template #prefix>
+                <el-icon><Search /></el-icon>
+              </template>
+            </el-input>
           </div>
 
           <div class="category-tabs">
@@ -244,7 +247,7 @@ import { getAllCategories } from '@/api/category'
 import { createOrder } from '@/api/order'
 import { getInventoryByProductId } from '@/api/inventory'
 import { getMemberByPhone } from '@/api/member'
-import { Goods, Delete } from '@element-plus/icons-vue'
+import { Goods, Delete, Search } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const loadingProducts = ref(false)
