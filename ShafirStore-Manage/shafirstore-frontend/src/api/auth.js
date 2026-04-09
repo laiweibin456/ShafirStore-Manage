@@ -29,3 +29,11 @@ export function register(data) {
     data
   })
 }
+
+export function updateCurrentUser(data) {
+  return request({
+    url: '/auth/current',
+    method: 'put',
+    data
+  })
+}

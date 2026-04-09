@@ -65,9 +65,7 @@
           <template #header>
             <span>销售趋势</span>
           </template>
-          <div class="chart-placeholder">
-            <p>近7天销售趋势图</p>
-          </div>
+          <div ref="chartRef" class="chart-container"></div>
         </el-card>
       </el-col>
       <el-col :span="12">
@@ -88,17 +86,151 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { Goods, Sell, User, Warning, Coin } from '@element-plus/icons-vue'
 import { getTodayOrderCount, getTodaySalesAmount } from '@/api/order'
+import { getProductList } from '@/api/product'
+import { getMemberCount } from '@/api/member'
+import { getLowStockAlerts } from '@/api/inventory'
+import { getDailySales } from '@/api/statistics'
+import * as echarts from 'echarts'
 
 const stats = ref({
-  productCount: 12,
+  productCount: 0,
   todayOrders: 0,
   todaySales: 0,
-  memberCount: 3,
+  memberCount: 0,
   alertCount: 0
 })
+
+const chartRef = ref(null)
+let chartInstance = null
+
+const fetchProductCount = async () => {
+  try {
+    const res = await getProductList({ page: 1, pageSize: 1 })
+    stats.value.productCount = res.data.total || 0
+  } catch (error) {
+    console.error('获取商品数量失败', error)
+  }
+}
+
+const fetchMemberCount = async () => {
+  try {
+    const res = await getMemberCount()
+    stats.value.memberCount = res.data || 0
+  } catch (error) {
+    console.error('获取会员数量失败', error)
+  }
+}
+
+const fetchAlertCount = async () => {
+  try {
+    const res = await getLowStockAlerts()
+    const alerts = res.data || []
+    stats.value.alertCount = alerts.length || 0
+  } catch (error) {
+    console.error('获取库存预警失败', error)
+  }
+}
+
+const fetchSalesData = async () => {
+  try {
+    const res = await getDailySales({ days: 7 })
+    const salesData = res.data || []
+    updateChart(salesData)
+  } catch (error) {
+    console.error('获取销售数据失败', error)
+    const defaultData = [
+      { date: getDay(-6), amount: 0 },
+      { date: getDay(-5), amount: 0 },
+      { date: getDay(-4), amount: 0 },
+      { date: getDay(-3), amount: 0 },
+      { date: getDay(-2), amount: 0 },
+      { date: getDay(-1), amount: 0 },
+      { date: getDay(0), amount: 0 }
+    ]
+    updateChart(defaultData)
+  }
+}
+
+const getDay = (offset) => {
+  const date = new Date()
+  date.setDate(date.getDate() + offset)
+  const month = date.getMonth() + 1
+  const day = date.getDate()
+  return `${month}-${day}`
+}
+
+const updateChart = (salesData) => {
+  if (!chartRef.value) return
+
+  const dates = salesData.map(item => item.date)
+  const amounts = salesData.map(item => item.amount || 0)
+
+  if (!chartInstance) {
+    chartInstance = echarts.init(chartRef.value)
+  }
+
+  const option = {
+    tooltip: {
+      trigger: 'axis',
+      formatter: '{b}<br/>销售额: ¥{c}'
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: dates
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: {
+        formatter: '¥{value}'
+      }
+    },
+    series: [
+      {
+        name: '销售额',
+        type: 'line',
+        smooth: true,
+        data: amounts,
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(64, 158, 255, 0.3)' },
+              { offset: 1, color: 'rgba(64, 158, 255, 0.05)' }
+            ]
+          }
+        },
+        itemStyle: {
+          color: '#409eff'
+        },
+        lineStyle: {
+          color: '#409eff'
+        }
+      }
+    ]
+  }
+
+  chartInstance.setOption(option)
+}
+
+const handleResize = () => {
+  if (chartInstance) {
+    chartInstance.resize()
+  }
+}
 
 const fetchStats = async () => {
   try {
@@ -108,6 +240,14 @@ const fetchStats = async () => {
     ])
     stats.value.todayOrders = orderCountRes.data || 0
     stats.value.todaySales = salesRes.data || 0
+
+    await Promise.all([
+      fetchProductCount(),
+      fetchMemberCount(),
+      fetchAlertCount()
+    ])
+
+    await fetchSalesData()
   } catch (error) {
     console.error('获取今日数据失败', error)
   }
@@ -115,6 +255,15 @@ const fetchStats = async () => {
 
 onMounted(() => {
   fetchStats()
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+  if (chartInstance) {
+    chartInstance.dispose()
+    chartInstance = null
+  }
 })
 </script>
 
@@ -161,14 +310,9 @@ onMounted(() => {
   color: #333;
 }
 
-.chart-placeholder {
-  height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f5f5f5;
-  border-radius: 4px;
-  color: #999;
+.chart-container {
+  height: 250px;
+  width: 100%;
 }
 
 .quick-actions {

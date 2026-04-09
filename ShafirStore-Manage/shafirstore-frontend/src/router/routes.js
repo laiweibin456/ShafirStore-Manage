@@ -18,6 +18,12 @@ export default [
         meta: { title: '首页', requiresAuth: true }
       },
       {
+        path: 'profile',
+        name: 'Profile',
+        component: () => import('@/views/system/Profile.vue'),
+        meta: { title: '个人中心', requiresAuth: true }
+      },
+      {
         path: 'system/user',
         name: 'UserManage',
         component: () => import('@/views/system/UserManage.vue'),
