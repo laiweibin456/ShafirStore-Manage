@@ -84,10 +84,24 @@
             <span>会员管理</span>
           </el-menu-item>
 
-          <el-menu-item v-if="userStore.isAdmin" index="/statistics">
-            <el-icon><DataAnalysis /></el-icon>
-            <span>统计分析</span>
-          </el-menu-item>
+          <el-sub-menu v-if="userStore.isAdmin" index="/statistics">
+            <template #title>
+              <el-icon><DataAnalysis /></el-icon>
+              <span>统计分析</span>
+            </template>
+            <el-menu-item index="/statistics/sales">
+              <el-icon><TrendCharts /></el-icon>
+              <span>销售统计</span>
+            </el-menu-item>
+            <el-menu-item index="/statistics/inventory">
+              <el-icon><Box /></el-icon>
+              <span>库存统计</span>
+            </el-menu-item>
+            <el-menu-item index="/statistics/member">
+              <el-icon><User /></el-icon>
+              <span>会员统计</span>
+            </el-menu-item>
+          </el-sub-menu>
 
           <el-menu-item v-if="userStore.isAdmin" index="/system/user">
             <el-icon><Setting /></el-icon>
@@ -108,7 +122,7 @@ import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { ElMessage } from 'element-plus'
-import { HomeFilled, Goods, Box, Sell, User, DataAnalysis, Setting, Avatar, List, Top, Bottom, Document, Warning, ShoppingCart } from '@element-plus/icons-vue'
+import { HomeFilled, Goods, Box, Sell, User, DataAnalysis, Setting, Avatar, List, Top, Bottom, Document, Warning, ShoppingCart, TrendCharts } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
