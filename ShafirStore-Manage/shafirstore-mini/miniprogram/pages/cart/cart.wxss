@@ -1,0 +1,158 @@
+/* pages/cart/cart.wxss - 购物车页面样式 */
+
+.cart-page {
+  min-height: 100vh;
+  background-color: #F5F5F5;
+  padding-bottom: 120rpx;
+}
+
+/* 购物车列表 */
+.cart-list {
+  padding: 20rpx;
+}
+
+.cart-item {
+  display: flex;
+  background-color: #ffffff;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+}
+
+.item-checkbox {
+  display: flex;
+  align-items: center;
+  margin-right: 20rpx;
+}
+
+.item-image {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 8rpx;
+  margin-right: 20rpx;
+}
+
+.item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.item-name {
+  font-size: 28rpx;
+  color: #333333;
+}
+
+.item-price {
+  font-size: 28rpx;
+  color: #E6A23C;
+  font-weight: bold;
+}
+
+.item-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.quantity-control {
+  display: flex;
+  align-items: center;
+}
+
+.qty-btn {
+  width: 48rpx;
+  height: 48rpx;
+  background-color: #F5F5F5;
+  border-radius: 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+}
+
+.qty-num {
+  padding: 0 20rpx;
+  font-size: 28rpx;
+}
+
+.delete-btn {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+/* 空购物车 */
+.empty-cart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+}
+
+.empty-cart text {
+  font-size: 28rpx;
+  color: #999999;
+  margin-bottom: 30rpx;
+}
+
+.go-shopping {
+  padding: 20rpx 60rpx;
+  background-color: #E6A23C;
+  color: #ffffff;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+}
+
+/* 底部结算栏 */
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100rpx;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 30rpx;
+  box-shadow: 0 -2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.select-all {
+  display: flex;
+  align-items: center;
+}
+
+.select-all text {
+  margin-left: 10rpx;
+  font-size: 28rpx;
+  color: #333333;
+}
+
+.total-info {
+  flex: 1;
+  text-align: right;
+  margin-right: 20rpx;
+}
+
+.total-label {
+  font-size: 28rpx;
+  color: #333333;
+}
+
+.total-price {
+  font-size: 36rpx;
+  color: #E6A23C;
+  font-weight: bold;
+}
+
+.checkout-btn {
+  padding: 20rpx 40rpx;
+  background-color: #E6A23C;
+  color: #ffffff;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+}

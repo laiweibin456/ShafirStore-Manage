@@ -1,0 +1,95 @@
+/* app.wxss - 全局样式 */
+
+/* 主题色变量 */
+page {
+  --primary-color: #E6A23C;
+  --secondary-color: #FF9800;
+  --text-color: #333333;
+  --text-secondary: #666666;
+  --text-placeholder: #999999;
+  --bg-color: #F5F5F5;
+  --border-color: #EEEEEE;
+  --success-color: #52C41A;
+  --error-color: #FF4D4F;
+}
+
+/* 重置样式 */
+page {
+  background-color: var(--bg-color);
+  font-size: 28rpx;
+  color: var(--text-color);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* 安全区域适配 */
+page.safe-area {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 清除浮动 */
+.clearfix::after {
+  content: '';
+  display: table;
+  clear: both;
+}
+
+/* 文字省略 */
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text-ellipsis-2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 弹性布局 */
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 按钮样式 */
+.btn-primary {
+  background-color: var(--primary-color);
+  color: #ffffff;
+  border-radius: 44rpx;
+  padding: 24rpx 60rpx;
+  font-size: 32rpx;
+  text-align: center;
+}
+
+.btn-default {
+  background-color: #ffffff;
+  color: var(--text-color);
+  border: 1rpx solid var(--border-color);
+  border-radius: 44rpx;
+  padding: 24rpx 60rpx;
+  font-size: 32rpx;
+  text-align: center;
+}
+
+/* 通用区块 */
+.section {
+  background-color: #ffffff;
+  margin: 20rpx;
+  padding: 30rpx;
+  border-radius: 12rpx;
+}

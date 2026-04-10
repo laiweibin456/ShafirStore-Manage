@@ -1,0 +1,144 @@
+/* pages/order/detail/detail.wxss - 订单详情页面样式 */
+
+.order-detail-page {
+  min-height: 100vh;
+  background-color: #F5F5F5;
+}
+
+/* 订单状态 */
+.status-section {
+  padding: 40rpx;
+  text-align: center;
+}
+
+.status-text {
+  font-size: 36rpx;
+  font-weight: bold;
+}
+
+.status-section.status-1 .status-text { color: #E6A23C; }
+.status-section.status-2 .status-text { color: #52C41A; }
+.status-section.status-3 .status-text { color: #999999; }
+.status-section.status-4 .status-text { color: #FF4D4F; }
+
+/* 区块 */
+.section {
+  background-color: #ffffff;
+  margin: 20rpx;
+  padding: 30rpx;
+  border-radius: 12rpx;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #F5F5F5;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-size: 28rpx;
+  color: #999999;
+}
+
+.info-value {
+  font-size: 28rpx;
+  color: #333333;
+}
+
+/* 商品列表 */
+.goods-list {
+  margin-top: 20rpx;
+}
+
+.goods-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #F5F5F5;
+}
+
+.goods-item:last-child {
+  border-bottom: none;
+}
+
+.goods-image {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 8rpx;
+  margin-right: 20rpx;
+}
+
+.goods-info {
+  flex: 1;
+}
+
+.goods-name {
+  display: block;
+  font-size: 28rpx;
+  color: #333333;
+}
+
+.goods-price {
+  display: block;
+  font-size: 28rpx;
+  color: #E6A23C;
+  margin-top: 8rpx;
+}
+
+.goods-qty {
+  font-size: 28rpx;
+  color: #999999;
+}
+
+/* 价格明细 */
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 16rpx 0;
+}
+
+.price-label {
+  font-size: 28rpx;
+  color: #666666;
+}
+
+.price-value {
+  font-size: 28rpx;
+  color: #333333;
+}
+
+.price-row.total {
+  margin-top: 10rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #F5F5F5;
+}
+
+.price-row.total .price-value {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #E6A23C;
+}
+
+/* 操作按钮 */
+.action-bar {
+  padding: 30rpx;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.action-btn {
+  padding: 16rpx 40rpx;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  margin-left: 20rpx;
+}
+
+.action-btn.cancel {
+  background-color: #F5F5F5;
+  color: #666666;
+}

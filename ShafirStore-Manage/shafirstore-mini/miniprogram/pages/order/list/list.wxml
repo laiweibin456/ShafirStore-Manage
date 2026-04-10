@@ -1,0 +1,31 @@
+<!--pages/order/list/list.wxml-->
+<view class="order-list-page">
+  <!-- 状态tab -->
+  <view class="status-tabs">
+    <view class="tab-item {{status === 0 ? 'active' : ''}}" bindtap="changeTab" data-status="0">全部</view>
+    <view class="tab-item {{status === 1 ? 'active' : ''}}" bindtap="changeTab" data-status="1">待取货</view>
+    <view class="tab-item {{status === 2 ? 'active' : ''}}" bindtap="changeTab" data-status="2">已完成</view>
+    <view class="tab-item {{status === 3 ? 'active' : ''}}" bindtap="changeTab" data-status="3">已取消</view>
+  </view>
+
+  <!-- 订单列表 -->
+  <scroll-view class="order-scroll" scroll-y>
+    <view class="order-list">
+      <view class="order-item" wx:for="{{orders}}" wx:key="id" bindtap="goToDetail" data-id="{{item.id}}">
+        <view class="order-header">
+          <text class="order-no">订单号：{{item.orderNo}}</text>
+          <text class="order-status status-{{item.status}}">{{getStatusText(item.status)}}</text>
+        </view>
+        <view class="order-goods">
+          <text class="goods-count">{{item.items.length}}件商品</text>
+          <text class="goods-total">¥{{item.payAmount}}</text>
+        </view>
+        <view class="order-time">{{item.createTime}}</view>
+      </view>
+    </view>
+
+    <view class="empty" wx:if="{{orders.length === 0}}">
+      <text>暂无订单</text>
+    </view>
+  </scroll-view>
+</view>

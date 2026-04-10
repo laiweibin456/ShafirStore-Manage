@@ -1,0 +1,94 @@
+/* pages/user/user.wxss - 用户页面样式 */
+
+.user-page {
+  min-height: 100vh;
+  background-color: #F5F5F5;
+}
+
+/* 用户信息 */
+.user-info {
+  background-color: #ffffff;
+  padding: 60rpx 40rpx;
+  display: flex;
+  align-items: center;
+}
+
+.avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  margin-right: 30rpx;
+}
+
+.info-text {
+  flex: 1;
+}
+
+.nickname {
+  display: block;
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333333;
+}
+
+.phone {
+  display: block;
+  font-size: 28rpx;
+  color: #999999;
+  margin-top: 8rpx;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 24rpx;
+  background-color: #E6A23C;
+  color: #ffffff;
+  border-radius: 44rpx;
+  font-size: 32rpx;
+  text-align: center;
+}
+
+/* 功能菜单 */
+.menu-list {
+  background-color: #ffffff;
+  margin: 20rpx;
+  border-radius: 12rpx;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #F5F5F5;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-icon {
+  font-size: 40rpx;
+  margin-right: 20rpx;
+}
+
+.menu-text {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333333;
+}
+
+.menu-arrow {
+  font-size: 28rpx;
+  color: #CCCCCC;
+}
+
+/* 退出登录 */
+.logout-btn {
+  margin: 40rpx 20rpx;
+  padding: 24rpx;
+  background-color: #ffffff;
+  border-radius: 12rpx;
+  text-align: center;
+  font-size: 28rpx;
+  color: #FF4D4F;
+}

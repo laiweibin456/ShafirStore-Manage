@@ -1,0 +1,26 @@
+<!--pages/member/points/points.wxml-->
+<view class="points-page">
+  <!-- 积分概览 -->
+  <view class="points-overview">
+    <text class="points-value">{{points}}</text>
+    <text class="points-label">当前积分</text>
+  </view>
+
+  <!-- 积分记录 -->
+  <view class="record-list">
+    <view class="record-item" wx:for="{{records}}" wx:key="id">
+      <view class="record-info">
+        <text class="record-type">{{item.type === 1 ? '获得' : '消耗'}}</text>
+        <text class="record-remark">{{item.remark}}</text>
+        <text class="record-time">{{item.createTime}}</text>
+      </view>
+      <text class="record-points {{item.type === 1 ? 'add' : 'minus'}}">
+        {{item.type === 1 ? '+' : '-'}}{{item.points}}
+      </text>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{records.length === 0}}">
+    <text>暂无积分记录</text>
+  </view>
+</view>

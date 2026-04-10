@@ -1,0 +1,55 @@
+<!--pages/order/create/create.wxml-->
+<view class="order-create-page">
+  <!-- 商品清单 -->
+  <view class="section">
+    <view class="section-title">商品清单</view>
+    <view class="goods-list">
+      <view class="goods-item" wx:for="{{orderItems}}" wx:key="id">
+        <image class="goods-image" src="{{item.imageUrl}}" mode="aspectFill" />
+        <view class="goods-info">
+          <text class="goods-name">{{item.name}}</text>
+          <text class="goods-price">¥{{item.price}}</text>
+        </view>
+        <text class="goods-qty">x{{item.quantity}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 支付方式 -->
+  <view class="section">
+    <view class="section-title">支付方式</view>
+    <radio-group bindchange="onPayTypeChange">
+      <label class="pay-item">
+        <radio value="2" checked="{{payType === 2}}" />
+        <text>微信支付</text>
+      </label>
+      <label class="pay-item">
+        <radio value="1" checked="{{payType === 1}}" />
+        <text>到店付款</text>
+      </label>
+    </radio-group>
+  </view>
+
+  <!-- 订单备注 -->
+  <view class="section">
+    <view class="section-title">订单备注</view>
+    <input class="remark-input" placeholder="输入特殊需求..." bindinput="onRemarkInput" value="{{remark}}" />
+  </view>
+
+  <!-- 价格明细 -->
+  <view class="price-detail">
+    <view class="price-row">
+      <text class="price-label">商品金额</text>
+      <text class="price-value">¥{{totalAmount}}</text>
+    </view>
+    <view class="price-row total">
+      <text class="price-label">合计</text>
+      <text class="price-value">¥{{totalAmount}}</text>
+    </view>
+  </view>
+
+  <!-- 提交按钮 -->
+  <view class="submit-bar">
+    <view class="submit-btn" bindtap="submitOrder">提交订单</view>
+  </view>
+</view>

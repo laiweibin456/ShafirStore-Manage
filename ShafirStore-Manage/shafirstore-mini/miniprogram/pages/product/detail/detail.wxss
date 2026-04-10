@@ -1,0 +1,143 @@
+/* pages/product/detail/detail.wxss - 商品详情页样式 */
+
+.product-detail-page {
+  min-height: 100vh;
+  background-color: #F5F5F5;
+  padding-bottom: 120rpx;
+}
+
+/* 图片轮播 */
+.image-swiper {
+  height: 750rpx;
+  background-color: #ffffff;
+}
+
+.product-image {
+  width: 100%;
+  height: 100%;
+}
+
+/* 价格信息 */
+.price-section {
+  background-color: #ffffff;
+  padding: 30rpx;
+  display: flex;
+  align-items: baseline;
+}
+
+.price {
+  font-size: 48rpx;
+  color: #E6A23C;
+  font-weight: bold;
+}
+
+.unit {
+  font-size: 28rpx;
+  color: #999999;
+  margin-left: 10rpx;
+}
+
+/* 基本信息 */
+.info-section {
+  background-color: #ffffff;
+  margin-top: 20rpx;
+  padding: 30rpx;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #F5F5F5;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-size: 28rpx;
+  color: #999999;
+}
+
+.info-value {
+  font-size: 28rpx;
+  color: #333333;
+}
+
+/* 商品详情 */
+.detail-section {
+  background-color: #ffffff;
+  margin-top: 20rpx;
+  padding: 30rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333333;
+  margin-bottom: 20rpx;
+}
+
+.detail-content {
+  font-size: 28rpx;
+  color: #666666;
+  line-height: 1.6;
+}
+
+/* 底部操作栏 */
+.action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100rpx;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 30rpx;
+  box-shadow: 0 -2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.action-icons {
+  display: flex;
+}
+
+.icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 40rpx;
+}
+
+.iconfont {
+  font-size: 40rpx;
+}
+
+.icon-text {
+  font-size: 22rpx;
+  color: #666666;
+  margin-top: 4rpx;
+}
+
+.action-buttons {
+  display: flex;
+}
+
+.btn-add-cart, .btn-buy {
+  padding: 20rpx 40rpx;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  margin-left: 20rpx;
+}
+
+.btn-add-cart {
+  background-color: #FF9800;
+  color: #ffffff;
+}
+
+.btn-buy {
+  background-color: #E6A23C;
+  color: #ffffff;
+}
