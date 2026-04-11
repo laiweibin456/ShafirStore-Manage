@@ -1,188 +1,377 @@
-/* pages/index/index.wxss - 首页样式 */
+/* pages/index/index.wxss - 首页样式 (极简设计) */
 
+/* ==================== 页面基础布局 ==================== */
 .index-page {
   min-height: 100vh;
   background-color: #F5F5F5;
-  padding-bottom: 20rpx;
+  display: flex;
+  flex-direction: column;
 }
 
-/* 搜索栏 */
-.search-bar {
-  background-color: #ffffff;
-  padding: 20rpx 30rpx;
-}
-
-.search-text {
-  display: block;
-  background-color: #F5F5F5;
-  border-radius: 30rpx;
-  padding: 20rpx 30rpx;
-  font-size: 28rpx;
-  color: #999999;
-  text-align: center;
-}
-
-/* 轮播图 */
-.banner-swiper {
-  height: 300rpx;
-  margin: 20rpx;
-  border-radius: 12rpx;
+/* ==================== 上部60%品牌宣传区域 ==================== */
+.brand-section {
+  position: relative;
+  width: 100%;
+  height: 60vh;
+  min-height: 500rpx;
   overflow: hidden;
 }
 
-.banner-image {
+.brand-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.brand-image {
   width: 100%;
   height: 100%;
 }
 
-/* 分类入口 */
-.category-grid {
-  display: flex;
-  flex-wrap: wrap;
-  background-color: #ffffff;
-  padding: 30rpx 20rpx;
-  margin: 0 20rpx;
-  border-radius: 12rpx;
+.gradient-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(
+    to top,
+    rgba(245, 245, 245, 1) 0%,
+    rgba(245, 245, 245, 0.8) 40%,
+    transparent 100%
+  );
 }
 
-.category-item {
-  width: 25%;
+.status-bar-placeholder {
+  height: calc(env(safe-area-inset-top) + 44rpx);
+}
+
+/* ==================== 下部UI区域 ==================== */
+.bottom-section {
+  flex: 1;
+  margin-top: -80rpx;
+  padding: 0 24rpx;
+  padding-bottom: env(safe-area-inset-bottom);
+  position: relative;
+  z-index: 10;
+}
+
+/* ==================== 用户信息卡片 ==================== */
+.user-card {
+  display: flex;
+  align-items: center;
+  background-color: #FFFFFF;
+  border-radius: 16rpx;
+  padding: 28rpx 24rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+
+.user-card:active {
+  opacity: 0.9;
+}
+
+.user-left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.user-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: #E0E0E0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 20rpx;
+}
+
+.user-avatar image {
+  width: 100%;
+  height: 100%;
+}
+
+.user-avatar text {
+  font-size: 28rpx;
+  color: #999999;
+  font-weight: 500;
+}
+
+.user-greeting {
+  flex: 1;
+  min-width: 0;
+}
+
+.greeting-text {
+  display: block;
+  font-size: 30rpx;
+  color: #333333;
+  font-weight: 500;
+  margin-bottom: 6rpx;
+}
+
+.member-tag {
+  display: inline-block;
+  border: 1rpx solid #D0D0D0;
+  padding: 2rpx 12rpx;
+  border-radius: 4rpx;
+}
+
+.tag-text {
+  font-size: 20rpx;
+  color: #999999;
+}
+
+.user-stats {
+  display: flex;
+  align-items: center;
+  gap: 28rpx;
+  flex-shrink: 0;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  display: block;
+  font-size: 32rpx;
+  color: #333333;
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+.stat-label {
+  display: block;
+  font-size: 20rpx;
+  color: #999999;
+  margin-top: 4rpx;
+}
+
+/* ==================== 双大按钮区域 ==================== */
+.action-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.action-btn {
+  background-color: #FFFFFF;
+  border-radius: 16rpx;
+  padding: 36rpx 24rpx 32rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 20rpx;
+  justify-content: center;
+  transition: all 0.15s ease;
 }
 
-.category-icon {
+.action-btn:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+/* 按钮图标圆圈 */
+.btn-icon-circle {
   width: 80rpx;
   height: 80rpx;
-  background-color: #F5F5F5;
   border-radius: 50%;
+  border: 2rpx solid #D0D0D0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 50rpx;
-  margin-bottom: 10rpx;
-}
-
-.category-name {
-  font-size: 26rpx;
-  color: #333333;
-}
-
-/* 区块 */
-.section {
-  background-color: #ffffff;
-  margin: 20rpx;
-  padding: 20rpx;
-  border-radius: 12rpx;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 20rpx;
 }
 
-.section-title {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #333333;
-}
-
-.section-more {
-  font-size: 26rpx;
-  color: #999999;
-}
-
-/* 商品横向滚动 */
-.product-scroll {
-  white-space: nowrap;
-  height: 320rpx;
-}
-
-.product-list {
-  display: inline-flex;
-}
-
-.product-card {
-  width: 240rpx;
-  margin-right: 20rpx;
-  background-color: #ffffff;
-  border-radius: 12rpx;
-  overflow: hidden;
-}
-
-.product-image {
-  width: 240rpx;
-  height: 240rpx;
-}
-
-.product-info {
-  padding: 16rpx;
-}
-
-.product-name {
-  display: block;
-  font-size: 28rpx;
-  color: #333333;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.product-price {
-  display: block;
-  font-size: 32rpx;
-  color: #E6A23C;
-  font-weight: bold;
-  margin-top: 10rpx;
-}
-
-/* 商品网格 */
-.product-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-}
-
-.product-grid .product-card {
-  width: 48%;
-  margin-bottom: 20rpx;
-}
-
-.product-grid .product-image {
-  width: 100%;
-  height: 320rpx;
-}
-
-.product-desc {
-  display: block;
-  font-size: 24rpx;
-  color: #999999;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+/* CSS纯线条图标 - 购物袋 */
+.icon-bag {
+  width: 28rpx;
+  height: 24rpx;
+  border: 3rpx solid #333333;
+  border-radius: 2rpx;
+  position: relative;
   margin-top: 8rpx;
 }
 
-.product-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 10rpx;
+.icon-bag::before {
+  content: '';
+  position: absolute;
+  top: -12rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16rpx;
+  height: 12rpx;
+  border: 3rpx solid #333333;
+  border-bottom: none;
+  border-radius: 8rpx 8rpx 0 0;
 }
 
-.product-add {
-  width: 48rpx;
-  height: 48rpx;
-  background-color: #E6A23C;
-  color: #ffffff;
+/* CSS纯线条图标 - 外卖配送 */
+.icon-delivery {
+  width: 28rpx;
+  height: 3rpx;
+  background-color: #333333;
+  position: relative;
+}
+
+.icon-delivery::before {
+  content: '';
+  position: absolute;
+  right: -2rpx;
+  top: -7rpx;
+  width: 0;
+  height: 0;
+  border-left: 12rpx solid #333333;
+  border-top: 8rpx solid transparent;
+  border-bottom: 8rpx solid transparent;
+}
+
+.btn-title {
+  display: block;
+  font-size: 30rpx;
+  color: #333333;
+  font-weight: 600;
+  margin-bottom: 6rpx;
+  letter-spacing: 1rpx;
+}
+
+.btn-desc {
+  display: block;
+  font-size: 22rpx;
+  color: #999999;
+}
+
+/* ==================== 功能入口区域 ==================== */
+.function-entries {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.entry-item {
+  display: flex;
+  align-items: center;
+  background-color: #FFFFFF;
+  border-radius: 16rpx;
+  padding: 28rpx 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+  transition: all 0.15s ease;
+}
+
+.entry-item:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.entry-icon {
+  width: 64rpx;
+  height: 64rpx;
   border-radius: 50%;
+  border: 2rpx solid #D0D0D0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32rpx;
-  font-weight: bold;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+/* CSS纯线条图标 - 星形(积分) */
+.icon-star {
+  width: 20rpx;
+  height: 20rpx;
+  position: relative;
+}
+
+.icon-star::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10rpx solid transparent;
+  border-right: 10rpx solid transparent;
+  border-bottom: 14rpx solid #333333;
+}
+
+.icon-star::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10rpx solid transparent;
+  border-right: 10rpx solid transparent;
+  border-top: 14rpx solid #333333;
+}
+
+/* CSS纯线条图标 - 定位针(门店) */
+.icon-pin {
+  width: 16rpx;
+  height: 16rpx;
+  border: 3rpx solid #333333;
+  border-radius: 50%;
+  position: relative;
+}
+
+.icon-pin::after {
+  content: '';
+  position: absolute;
+  bottom: -12rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8rpx solid transparent;
+  border-right: 8rpx solid transparent;
+  border-top: 10rpx solid #333333;
+}
+
+.entry-title {
+  font-size: 28rpx;
+  color: #333333;
+  font-weight: 500;
+}
+
+/* ==================== 底部安全区域 ==================== */
+.safe-area-bottom {
+  height: 40rpx;
+}
+
+/* ==================== 响应式适配 ==================== */
+@media screen and (max-width: 320px) {
+  .btn-title {
+    font-size: 28rpx;
+  }
+
+  .stat-value {
+    font-size: 28rpx;
+  }
+
+  .user-stats {
+    gap: 20rpx;
+  }
+}
+
+@media screen and (min-width: 414px) {
+  .brand-section {
+    min-height: 560rpx;
+  }
+
+  .action-btn {
+    padding: 44rpx 28rpx 36rpx;
+  }
 }

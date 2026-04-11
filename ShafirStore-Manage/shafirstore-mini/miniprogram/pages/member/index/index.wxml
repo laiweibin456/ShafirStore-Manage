@@ -1,57 +1,104 @@
-<!--pages/member/index/index.wxml-->
+<!--pages/member/index/index.wxml - 会员中心页面-->
 <view class="member-page">
-  <!-- 会员信息 -->
-  <view class="member-info" wx:if="{{hasUserInfo}}">
-    <image class="avatar" src="{{userInfo.avatarUrl}}" mode="aspectFill" />
-    <view class="info-text">
-      <text class="nickname">{{userInfo.nickName}}</text>
-      <text class="level">{{memberInfo.levelName}}</text>
+  <!-- 用户信息区域 -->
+  <view class="user-section">
+    <view class="user-card" bindtap="goToProfile">
+      <view class="user-avatar">
+        <image wx:if="{{userInfo.avatarUrl}}" src="{{userInfo.avatarUrl}}" mode="aspectFill"></image>
+        <text wx:else>LE</text>
+      </view>
+      <view class="user-info">
+        <text class="user-name">{{userInfo.nickName || '点击登录'}}</text>
+        <view class="member-badge">
+          <text class="badge-text">{{memberInfo.levelName || '普通会员'}}</text>
+        </view>
+      </view>
+      <view class="arrow-right">
+        <view class="icon-arrow"></view>
+      </view>
     </view>
   </view>
-  <view class="member-info" wx:else>
-    <button class="login-btn" bindtap="getUserProfile">微信一键登录</button>
+
+  <!-- 数据统计 -->
+  <view class="stats-row">
+    <view class="stat-item" bindtap="goToBalance">
+      <text class="stat-value">{{memberInfo.balance || 0}}</text>
+      <text class="stat-label">余额</text>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item" bindtap="goToPoints">
+      <text class="stat-value">{{memberInfo.points || 0}}</text>
+      <text class="stat-label">积分</text>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item" bindtap="goToCoupons">
+      <text class="stat-value">{{memberInfo.coupons || 0}}</text>
+      <text class="stat-label">优惠券</text>
+    </view>
   </view>
 
   <!-- 会员码 -->
   <view class="member-code-card" wx:if="{{hasUserInfo}}">
-    <view class="code-header">
-      <text class="member-name">{{memberInfo.name}}</text>
-      <text class="member-phone">{{memberInfo.phone}}</text>
+    <view class="code-top">
+      <text class="code-title">会员码</text>
+      <text class="code-hint">出示给店员扫描</text>
     </view>
-    <view class="qrcode-wrapper">
-      <image class="qrcode" src="{{memberCodeUrl}}" mode="aspectFit" />
-    </view>
-    <text class="code-hint">出示给店员扫描</text>
-  </view>
-
-  <!-- 会员数据 -->
-  <view class="member-stats" wx:if="{{hasUserInfo}}">
-    <view class="stat-item">
-      <text class="stat-value">{{memberInfo.points}}</text>
-      <text class="stat-label">积分</text>
-    </view>
-    <view class="stat-item">
-      <text class="stat-value">{{memberInfo.totalConsume}}</text>
-      <text class="stat-label">累计消费</text>
+    <view class="code-area">
+      <view class="barcode">
+        <view class="bar" wx:for="{{8}}" wx:key="index" style="width: {{item % 2 === 0 ? '6rpx' : '3rpx'}}; height: 80rpx; background-color: #333;"></view>
+      </view>
+      <text class="code-number">{{memberInfo.memberNo || 'SF20260001'}}</text>
     </view>
   </view>
 
   <!-- 功能菜单 -->
-  <view class="menu-list">
-    <view class="menu-item" bindtap="goToPoints">
-      <text class="menu-icon">💰</text>
-      <text class="menu-text">积分明细</text>
-      <text class="menu-arrow">></text>
-    </view>
+  <view class="menu-section">
     <view class="menu-item" bindtap="goToOrders">
-      <text class="menu-icon">📋</text>
+      <view class="menu-icon">
+        <view class="icon-order"></view>
+      </view>
       <text class="menu-text">我的订单</text>
-      <text class="menu-arrow">></text>
+      <text class="menu-desc">查看全部订单</text>
+      <view class="icon-arrow-small"></view>
     </view>
-    <view class="menu-item" bindtap="goToUser">
-      <text class="menu-icon">⚙️</text>
+
+    <view class="menu-item" bindtap="goToPoints">
+      <view class="menu-icon">
+        <view class="icon-point"></view>
+      </view>
+      <text class="menu-text">积分明细</text>
+      <text class="menu-desc">{{memberInfo.points || 0}}积分</text>
+      <view class="icon-arrow-small"></view>
+    </view>
+
+    <view class="menu-item" bindtap="goToAddress">
+      <view class="menu-icon">
+        <view class="icon-store"></view>
+      </view>
+      <text class="menu-text">门店地址</text>
+      <text class="menu-desc">查看门店信息</text>
+      <view class="icon-arrow-small"></view>
+    </view>
+
+    <view class="menu-item" bindtap="callService">
+      <view class="menu-icon">
+        <view class="icon-phone"></view>
+      </view>
+      <text class="menu-text">联系客服</text>
+      <text class="menu-desc">在线咨询</text>
+      <view class="icon-arrow-small"></view>
+    </view>
+
+    <view class="menu-item" bindtap="goToSettings">
+      <view class="menu-icon">
+        <view class="icon-setting"></view>
+      </view>
       <text class="menu-text">设置</text>
-      <text class="menu-arrow">></text>
+      <text class="menu-desc">账户与隐私</text>
+      <view class="icon-arrow-small"></view>
     </view>
   </view>
+
+  <!-- 底部安全区域 -->
+  <view class="safe-area-bottom"></view>
 </view>

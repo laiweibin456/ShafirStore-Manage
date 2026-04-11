@@ -1,64 +1,90 @@
 // pages/index/index.ts
-import { getHomeData } from '../../utils/request'
-
 Page({
   data: {
-    banners: [],
-    categories: [],
-    hotProducts: [],
-    newProducts: []
+    hasUserInfo: false,
+    userInfo: {},
+    memberInfo: {}
   },
 
   onLoad() {
-    this.loadHomeData()
+    this.checkLoginStatus()
   },
 
   onShow() {
-    // 更新tabBar购物车数量
+    this.checkLoginStatus()
+    this.updateTabBarBadge()
+  },
+
+  checkLoginStatus() {
+    const token = wx.getStorageSync('token')
+    const userInfo = wx.getStorageSync('userInfo')
+    const memberInfo = wx.getStorageSync('memberInfo') || {}
+
+    if (token && userInfo) {
+      this.setData({
+        hasUserInfo: true,
+        userInfo,
+        memberInfo
+      })
+    } else {
+      this.setData({
+        hasUserInfo: false,
+        userInfo: {},
+        memberInfo: {}
+      })
+    }
+  },
+
+  updateTabBarBadge() {
     const cartCount = wx.getStorageSync('cartCount') || 0
     if (cartCount > 0) {
-      wx.setTabBarBadge({ index: 2, text: String(cartCount) })
+      wx.setTabBarBadge({ index: 1, text: String(cartCount) })
     } else {
-      wx.removeTabBarBadge({ index: 2 })
+      wx.removeTabBarBadge({ index: 1 })
     }
   },
 
-  async loadHomeData() {
-    try {
-      const res = await getHomeData()
-      this.setData({
-        banners: res.data.banners || [],
-        categories: res.data.categories || [],
-        hotProducts: res.data.hotProducts || [],
-        newProducts: res.data.newProducts || []
-      })
-    } catch (err) {
-      console.error('加载首页数据失败', err)
-    }
+  goToMember() {
+    wx.switchTab({ url: '/pages/member/index/index' })
   },
 
-  goToSearch() {
-    wx.navigateTo({ url: '/pages/product/list/list' })
+  goToReserve() {
+    wx.switchTab({ url: '/pages/product/list/list' })
   },
 
-  goToCategory(e: any) {
-    const categoryId = e.currentTarget.dataset.id
-    wx.navigateTo({
-      url: `/pages/product/list/list?categoryId=${categoryId}`
+  goToPoints() {
+    wx.navigateTo({ url: '/pages/member/points/points' })
+  },
+
+  goToOrders() {
+    wx.switchTab({ url: '/pages/order/list/list' })
+  },
+
+  callPhone() {
+    wx.makePhoneCall({
+      phoneNumber: '400-888-8888'
     })
   },
 
-  goToList(e: any) {
-    const type = e.currentTarget.dataset.type
-    wx.navigateTo({
-      url: `/pages/product/list/list?type=${type}`
+  callService() {
+    wx.makePhoneCall({
+      phoneNumber: '400-888-8888'
     })
   },
 
-  goToDetail(e: any) {
-    const productId = e.currentTarget.dataset.id
-    wx.navigateTo({
-      url: `/pages/product/detail/detail?id=${productId}`
-    })
+  goToHelp() {
+    wx.showToast({ title: '帮助中心开发中', icon: 'none' })
+  },
+
+  goToActivity() {
+    wx.showToast({ title: '活动页面开发中', icon: 'none' })
+  },
+
+  goToAddress() {
+    wx.showToast({ title: '门店自取功能开发中', icon: 'none' })
+  },
+
+  goToSettings() {
+    wx.showToast({ title: '设置功能开发中', icon: 'none' })
   }
 })

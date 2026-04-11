@@ -1,66 +1,104 @@
 // pages/member/index/index.js
 Page({
 
-  /**
-   * 页面的初始数据
-   */
   data: {
-
+    userInfo: {
+      nickName: '',
+      avatarUrl: ''
+    },
+    memberInfo: {
+      levelName: '普通会员',
+      balance: 0,
+      points: 0,
+      coupons: 0,
+      memberNo: 'SF20260001'
+    },
+    hasUserInfo: false
   },
 
-  /**
-   * 生命周期函数--监听页面加载
-   */
-  onLoad(options) {
-
+  onLoad() {
+    this.checkUserInfo();
   },
 
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面显示
-   */
   onShow() {
-
+    this.checkUserInfo();
+    this.loadMemberInfo();
   },
 
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide() {
-
+  checkUserInfo() {
+    const userInfo = wx.getStorageSync('userInfo');
+    if (userInfo) {
+      this.setData({
+        userInfo: userInfo,
+        hasUserInfo: true
+      });
+    }
   },
 
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload() {
-
+  loadMemberInfo() {
+    const memberInfo = wx.getStorageSync('memberInfo');
+    if (memberInfo) {
+      this.setData({ memberInfo: memberInfo });
+    }
   },
 
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
-  onPullDownRefresh() {
-
+  goToProfile() {
+    if (!this.data.hasUserInfo) {
+      wx.navigateTo({
+        url: '/pages/user/user'
+      });
+    } else {
+      wx.navigateTo({
+        url: '/pages/user/user'
+      });
+    }
   },
 
-  /**
-   * 页面上拉触底事件的处理函数
-   */
-  onReachBottom() {
-
+  goToBalance() {
+    wx.showToast({
+      title: '余额明细开发中',
+      icon: 'none'
+    });
   },
 
-  /**
-   * 用户点击右上角分享
-   */
-  onShareAppMessage() {
+  goToPoints() {
+    wx.navigateTo({
+      url: '/pages/member/points/points'
+    });
+  },
 
+  goToCoupons() {
+    wx.showToast({
+      title: '优惠券开发中',
+      icon: 'none'
+    });
+  },
+
+  goToOrders() {
+    wx.switchTab({
+      url: '/pages/order/list/list'
+    });
+  },
+
+  goToAddress() {
+    wx.openLocation({
+      latitude: 30.5728,
+      longitude: 104.0668,
+      name: '莎菲尔菓子',
+      address: '四川省成都市武侯区xxx路xxx号',
+      scale: 15
+    });
+  },
+
+  callService() {
+    wx.makePhoneCall({
+      phoneNumber: '028-88888888'
+    });
+  },
+
+  goToSettings() {
+    wx.navigateTo({
+      url: '/pages/user/user'
+    });
   }
 })

@@ -29,15 +29,15 @@
       },
       {
         "pagePath": "pages/product/list/list",
-        "text": "商品"
+        "text": "预定"
       },
       {
-        "pagePath": "pages/cart/cart",
-        "text": "购物车"
+        "pagePath": "pages/order/list/list",
+        "text": "订单"
       },
       {
         "pagePath": "pages/member/index/index",
-        "text": "会员"
+        "text": "我的"
       }
     ]
   },
