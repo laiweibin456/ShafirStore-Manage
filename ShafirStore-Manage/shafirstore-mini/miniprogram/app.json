@@ -9,6 +9,8 @@
     "pages/order/detail/detail",
     "pages/member/index/index",
     "pages/member/points/points",
+    "pages/member/login/login",
+    "pages/member/register/register",
     "pages/user/user"
   ],
   "window": {

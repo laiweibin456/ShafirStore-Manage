@@ -1,4 +1,3 @@
-<!--pages/order/list/list.wxml - 订单列表页面-->
 <view class="order-page">
   <!-- 顶部Tab切换 -->
   <view class="tab-bar">
@@ -14,8 +13,14 @@
     </view>
   </view>
 
+  <!-- 未登录提示 -->
+  <view class="login-tip" wx:if="{{!isLoggedIn}}">
+    <text class="tip-text">登录后查看预约订单</text>
+    <button class="tip-btn" bindtap="goToLogin">立即登录</button>
+  </view>
+
   <!-- 订单列表 -->
-  <scroll-view class="order-scroll" scroll-y>
+  <scroll-view class="order-scroll" scroll-y wx:if="{{isLoggedIn}}">
     <view class="order-list">
       <view
         class="order-card"
@@ -24,13 +29,13 @@
         bindtap="goToDetail"
         data-id="{{item.id}}"
       >
-        <!-- 订单头部：店铺名 + 状态 -->
+        <!-- 订单头部：订单号 + 状态 -->
         <view class="order-header">
           <view class="shop-info">
             <view class="icon-shop"></view>
             <text class="shop-name">莎菲尔菓子</text>
           </view>
-          <text class="order-status status-{{item.status}}">{{item.statusText}}</text>
+          <text class="order-status status-{{item.status}}">{{item.statusName}}</text>
         </view>
 
         <!-- 商品列表 -->
@@ -40,8 +45,7 @@
               <image class="goods-image" src="{{goods.imageUrl || '/images/placeholder.jpg'}}" mode="aspectFill"></image>
             </view>
             <view class="goods-info">
-              <text class="goods-name">{{goods.name}}</text>
-              <text class="goods-spec" wx:if="{{goods.specName}}">{{goods.specName}}</text>
+              <text class="goods-name">{{goods.productName || goods.name}}</text>
             </view>
             <view class="goods-right">
               <text class="goods-price">¥{{goods.price}}</text>
@@ -50,10 +54,15 @@
           </view>
         </view>
 
+        <!-- 订单信息 -->
+        <view class="order-info" wx:if="{{item.pickupTime}}">
+          <text class="info-text">取货时间: {{item.pickupTime}}</text>
+        </view>
+
         <!-- 订单底部：总价 + 操作按钮 -->
         <view class="order-footer">
           <view class="order-total">
-            <text class="total-label">共{{item.totalCount}}件 实付</text>
+            <text class="total-label">实付</text>
             <text class="total-price">¥{{item.payAmount}}</text>
           </view>
           <view class="order-actions">
@@ -90,6 +99,7 @@
     <view class="empty-state" wx:if="{{orders.length === 0 && !loading}}">
       <view class="empty-icon"></view>
       <text class="empty-text">暂无相关订单</text>
+      <button class="empty-btn" bindtap="goToHome">去逛逛</button>
     </view>
   </scroll-view>
 </view>

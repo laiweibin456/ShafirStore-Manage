@@ -5,7 +5,231 @@
   background-color: #F5F5F5;
 }
 
+/* ==================== 登录区域（未登录状态） ==================== */
+.login-section {
+  background-color: #FFFFFF;
+  padding: 60rpx 40rpx;
+  padding-top: calc(100rpx + env(safe-area-inset-top));
+}
+
+.login-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.login-logo {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 80rpx;
+  background-color: #f5f5f5;
+  margin-bottom: 30rpx;
+}
+
+.login-title {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 12rpx;
+}
+
+.login-desc {
+  font-size: 26rpx;
+  color: #999;
+  margin-bottom: 50rpx;
+}
+
+.btn-login {
+  width: 100%;
+  height: 88rpx;
+  background-color: #E6A23C;
+  color: #fff;
+  border-radius: 44rpx;
+  font-size: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+
+.btn-login::after {
+  border: none;
+}
+
 /* ==================== 用户信息区域 ==================== */
+.user-section {
+  background-color: #FFFFFF;
+  padding: 40rpx 24rpx 32rpx;
+  padding-top: calc(40rpx + env(safe-area-inset-top));
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+}
+
+.user-avatar {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: #E6A23C;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 24rpx;
+}
+
+.avatar-text {
+  font-size: 40rpx;
+  color: #fff;
+  font-weight: 600;
+}
+
+.user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name {
+  display: block;
+  font-size: 34rpx;
+  color: #333333;
+  font-weight: 600;
+  margin-bottom: 8rpx;
+}
+
+.member-badge {
+  display: inline-block;
+  background-color: #FFF3E0;
+  border: 1rpx solid #E6A23C;
+  padding: 4rpx 16rpx;
+  border-radius: 4rpx;
+}
+
+.badge-text {
+  font-size: 22rpx;
+  color: #E6A23C;
+}
+
+.logout-btn {
+  padding: 12rpx 24rpx;
+  background-color: #f5f5f5;
+  border-radius: 30rpx;
+}
+
+.logout-text {
+  font-size: 24rpx;
+  color: #666;
+}
+
+/* ==================== 会员进度卡片 ==================== */
+.member-progress-card {
+  background-color: #FFF8F0;
+  border-radius: 16rpx;
+  padding: 28rpx;
+  margin-top: 30rpx;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.progress-title {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 600;
+}
+
+.progress-hint {
+  font-size: 22rpx;
+  color: #E6A23C;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.progress-level {
+  display: flex;
+  align-items: center;
+}
+
+.level-name {
+  font-size: 32rpx;
+  color: #333;
+  font-weight: bold;
+  margin-right: 16rpx;
+}
+
+.level-discount {
+  font-size: 24rpx;
+  color: #E6A23C;
+  background-color: #FFE5C8;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+}
+
+.progress-stats {
+  text-align: right;
+}
+
+.stats-label {
+  display: block;
+  font-size: 22rpx;
+  color: #999;
+}
+
+.stats-value {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 600;
+}
+
+.progress-bar {
+  margin-top: 10rpx;
+}
+
+.progress-bar-bg {
+  height: 16rpx;
+  background-color: #FFE5C8;
+  border-radius: 8rpx;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #E6A23C, #FF9800);
+  border-radius: 8rpx;
+  transition: width 0.3s ease;
+}
+
+.progress-tips {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12rpx;
+}
+
+.tips-current,
+.tips-next {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.max-level-hint {
+  font-size: 24rpx;
+  color: #E6A23C;
+  text-align: center;
+}
+
+/* ==================== 用户信息区域（已登录） ==================== */
 .user-section {
   background-color: #FFFFFF;
   padding: 40rpx 24rpx 32rpx;

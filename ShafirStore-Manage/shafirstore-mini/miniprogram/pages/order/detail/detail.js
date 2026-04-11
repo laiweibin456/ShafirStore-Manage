@@ -1,66 +1,56 @@
 // pages/order/detail/detail.js
 Page({
-
-  /**
-   * 页面的初始数据
-   */
   data: {
-
+    order: {},
+    statusText: ''
   },
 
-  /**
-   * 生命周期函数--监听页面加载
-   */
   onLoad(options) {
-
+    if (options.id) {
+      this.loadOrderDetail(Number(options.id))
+    }
   },
 
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady() {
-
+  loadOrderDetail(id) {
+    wx.$request.getOrderDetail(id)
+      .then(res => {
+        this.setData({
+          order: res.data,
+          statusText: this.getStatusText(res.data.status)
+        })
+      })
+      .catch(err => {
+        console.error('加载订单详情失败', err)
+      })
   },
 
-  /**
-   * 生命周期函数--监听页面显示
-   */
-  onShow() {
-
+  getStatusText(status) {
+    var statusMap = {
+      1: '待取货',
+      2: '已完成',
+      3: '已取消',
+      4: '已退款'
+    }
+    return statusMap[status] || '未知'
   },
 
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide() {
-
-  },
-
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload() {
-
-  },
-
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
-  onPullDownRefresh() {
-
-  },
-
-  /**
-   * 页面上拉触底事件的处理函数
-   */
-  onReachBottom() {
-
-  },
-
-  /**
-   * 用户点击右上角分享
-   */
-  onShareAppMessage() {
-
+  cancelOrder() {
+    var self = this
+    wx.showModal({
+      title: '提示',
+      content: '确定要取消该订单吗？',
+      success: function(res) {
+        if (res.confirm) {
+          wx.$request.cancelOrder(self.data.order.id)
+            .then(function() {
+              wx.showToast({ title: '订单已取消', icon: 'success' })
+              self.loadOrderDetail(self.data.order.id)
+            })
+            .catch(function() {
+              wx.showToast({ title: '取消失败', icon: 'none' })
+            })
+        }
+      }
+    })
   }
 })

@@ -1,0 +1,9 @@
+package com.shafir.store.repository;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.shafir.store.entity.RegularUser;
+import org.apache.ibatis.annotations.Mapper;
+
+@Mapper
+public interface RegularUserRepository extends BaseMapper<RegularUser> {
+}

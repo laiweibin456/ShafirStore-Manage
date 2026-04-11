@@ -1,53 +1,73 @@
-<!--pages/member/index/index.wxml - 会员中心页面-->
 <view class="member-page">
-  <!-- 用户信息区域 -->
-  <view class="user-section">
-    <view class="user-card" bindtap="goToProfile">
+  <!-- 未登录状态 -->
+  <view class="login-section" wx:if="{{!hasUserInfo}}">
+    <view class="login-card">
+      <text class="login-title">莎菲尔菓子</text>
+      <text class="login-desc">登录后享受更多会员权益</text>
+      <button class="btn-login" bindtap="goToLogin">登录/注册</button>
+    </view>
+  </view>
+
+  <!-- 已登录状态 -->
+  <view class="user-section" wx:if="{{hasUserInfo}}">
+    <view class="user-card">
       <view class="user-avatar">
-        <image wx:if="{{userInfo.avatarUrl}}" src="{{userInfo.avatarUrl}}" mode="aspectFill"></image>
-        <text wx:else>LE</text>
+        <text class="avatar-text">{{userAvatar}}</text>
       </view>
       <view class="user-info">
-        <text class="user-name">{{userInfo.nickName || '点击登录'}}</text>
+        <text class="user-name">{{userInfo.nickname || '用户'}}</text>
         <view class="member-badge">
-          <text class="badge-text">{{memberInfo.levelName || '普通会员'}}</text>
+          <text class="badge-text">{{userInfo.levelName || '普通用户'}}</text>
         </view>
       </view>
-      <view class="arrow-right">
-        <view class="icon-arrow"></view>
+      <view class="logout-btn" bindtap="onLogout">
+        <text class="logout-text">退出</text>
       </view>
     </view>
-  </view>
 
-  <!-- 数据统计 -->
-  <view class="stats-row">
-    <view class="stat-item" bindtap="goToBalance">
-      <text class="stat-value">{{memberInfo.balance || 0}}</text>
-      <text class="stat-label">余额</text>
-    </view>
-    <view class="stat-divider"></view>
-    <view class="stat-item" bindtap="goToPoints">
-      <text class="stat-value">{{memberInfo.points || 0}}</text>
-      <text class="stat-label">积分</text>
-    </view>
-    <view class="stat-divider"></view>
-    <view class="stat-item" bindtap="goToCoupons">
-      <text class="stat-value">{{memberInfo.coupons || 0}}</text>
-      <text class="stat-label">优惠券</text>
-    </view>
-  </view>
-
-  <!-- 会员码 -->
-  <view class="member-code-card" wx:if="{{hasUserInfo}}">
-    <view class="code-top">
-      <text class="code-title">会员码</text>
-      <text class="code-hint">出示给店员扫描</text>
-    </view>
-    <view class="code-area">
-      <view class="barcode">
-        <view class="bar" wx:for="{{8}}" wx:key="index" style="width: {{item % 2 === 0 ? '6rpx' : '3rpx'}}; height: 80rpx; background-color: #333;"></view>
+    <!-- 会员进度 -->
+    <view class="member-progress-card">
+      <view class="progress-header">
+        <text class="progress-title">会员等级</text>
+        <text class="progress-hint">消费达标自动升级</text>
       </view>
-      <text class="code-number">{{memberInfo.memberNo || 'SF20260001'}}</text>
+      <view class="progress-info">
+        <view class="progress-level">
+          <text class="level-name">{{userInfo.levelName || '普通用户'}}</text>
+          <text class="level-discount" wx:if="{{showDiscount}}">
+            {{discountText}}折
+          </text>
+        </view>
+        <view class="progress-stats">
+          <text class="stats-label">累计消费</text>
+          <text class="stats-value">¥{{userInfo.totalConsume || 0}}</text>
+        </view>
+      </view>
+      <view class="progress-bar" wx:if="{{userInfo.nextLevelThreshold}}">
+        <view class="progress-bar-bg">
+          <view class="progress-bar-fill" style="width: {{progressPercent}}%"></view>
+        </view>
+        <view class="progress-tips">
+          <text class="tips-current">当前 {{userInfo.totalConsume || 0}}</text>
+          <text class="tips-next">升级还需 ¥{{nextLevelAmount}}</text>
+        </view>
+      </view>
+      <view class="progress-bar" wx:if="{{isMaxLevel}}">
+        <text class="max-level-hint">您已是最高等级会员</text>
+      </view>
+    </view>
+
+    <!-- 积分信息 -->
+    <view class="stats-row">
+      <view class="stat-item">
+        <text class="stat-value">{{userInfo.points || 0}}</text>
+        <text class="stat-label">积分</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-value">{{discountText}}</text>
+        <text class="stat-label">折扣率</text>
+      </view>
     </view>
   </view>
 
@@ -67,7 +87,7 @@
         <view class="icon-point"></view>
       </view>
       <text class="menu-text">积分明细</text>
-      <text class="menu-desc">{{memberInfo.points || 0}}积分</text>
+      <text class="menu-desc">{{userInfo.points || 0}}积分</text>
       <view class="icon-arrow-small"></view>
     </view>
 

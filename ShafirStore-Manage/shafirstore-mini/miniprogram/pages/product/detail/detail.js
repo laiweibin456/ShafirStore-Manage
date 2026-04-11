@@ -1,66 +1,42 @@
 // pages/product/detail/detail.js
 Page({
-
-  /**
-   * 页面的初始数据
-   */
   data: {
-
+    product: {},
+    productId: 0
   },
 
-  /**
-   * 生命周期函数--监听页面加载
-   */
   onLoad(options) {
-
+    if (options.id) {
+      this.setData({ productId: Number(options.id) })
+      this.loadProduct()
+    }
   },
 
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady() {
-
+  loadProduct() {
+    wx.$request.getProductById(this.data.productId)
+      .then(res => {
+        this.setData({ product: res.data })
+      })
+      .catch(err => {
+        console.error('加载商品详情失败', err)
+      })
   },
 
-  /**
-   * 生命周期函数--监听页面显示
-   */
-  onShow() {
-
+  goToHome() {
+    wx.switchTab({ url: '/pages/index/index' })
   },
 
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide() {
-
+  goToCart() {
+    wx.switchTab({ url: '/pages/cart/cart' })
   },
 
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload() {
-
+  addToCart() {
+    wx.showToast({ title: '已加入购物车', icon: 'success' })
   },
 
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
-  onPullDownRefresh() {
-
-  },
-
-  /**
-   * 页面上拉触底事件的处理函数
-   */
-  onReachBottom() {
-
-  },
-
-  /**
-   * 用户点击右上角分享
-   */
-  onShareAppMessage() {
-
+  buyNow() {
+    wx.navigateTo({
+      url: '/pages/order/create/create?productId=' + this.data.productId
+    })
   }
 })
