@@ -31,7 +31,7 @@ DROP TABLE IF EXISTS sys_user;
 CREATE TABLE sys_user (
     id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '用户ID',
     username VARCHAR(50) NOT NULL UNIQUE COMMENT '用户名',
-    password VARCHAR(100) NOT NULL COMMENT '密码（BCrypt加密）',
+    password VARCHAR(100) NOT NULL COMMENT '密码（明文存储）',
     real_name VARCHAR(50) COMMENT '真实姓名',
     phone VARCHAR(20) COMMENT '手机号',
     email VARCHAR(100) COMMENT '邮箱',
