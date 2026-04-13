@@ -1,100 +1,48 @@
-<!--pages/product/list/list.wxml - 预定页面(分类+商品列表)-->
-<view class="product-page">
-  <!-- 主内容区：左侧分类 + 右侧商品 -->
+<view class="product-list-page">
   <view class="main-content">
-    <!-- 左侧分类导航 -->
     <scroll-view class="category-sidebar" scroll-y>
-      <view
-        class="category-item {{currentCategory === index ? 'active' : ''}}"
-        wx:for="{{categories}}"
-        wx:key="id"
-        bindtap="switchCategory"
-        data-index="{{index}}"
-      >
+      <view class="category-item {{currentCategoryIndex === index ? 'active' : ''}}"
+            wx:for="{{categories}}" wx:key="id"
+            bindtap="switchCategory" data-index="{{index}}">
         <text class="category-name">{{item.name}}</text>
+        <view class="category-indicator" wx:if="{{currentCategoryIndex === index}}"></view>
       </view>
     </scroll-view>
 
-    <!-- 右侧商品列表 -->
-    <scroll-view class="product-area" scroll-y scroll-top="{{scrollTop}}">
-      <!-- 分类标题 -->
-      <view class="section-title">
-        <text>{{categories[currentCategory].name || '热销'}}</text>
-      </view>
-
-      <!-- 商品列表 -->
+    <scroll-view class="product-content" scroll-y>
       <view class="product-list">
-        <view
-          class="product-item"
-          wx:for="{{products}}"
-          wx:key="id"
-        >
-          <!-- 商品图片 -->
-          <view class="product-image-wrap">
-            <image
-              class="product-image"
-              src="{{item.imageUrl || '/images/placeholder.jpg'}}"
-              mode="aspectFill"
-            ></image>
-            <!-- 库存标签 -->
-            <view class="stock-tag">
-              <text>还剩{{item.stock || 1}}份</text>
-            </view>
-          </view>
-
-          <!-- 商品信息 -->
+        <view class="product-item" wx:for="{{products}}" wx:key="id">
+          <image class="product-image" src="{{item.imageUrl || '/images/placeholder.jpg'}}" mode="aspectFill" bindtap="goToDetail" data-id="{{item.id}}" />
           <view class="product-info">
-            <view class="product-name-row">
-              <text class="product-name">{{item.name}}</text>
-              <view class="hot-tag" wx:if="{{item.isHot}}">
-                <text>人气推荐</text>
-              </view>
-            </view>
-
+            <text class="product-name" bindtap="goToDetail" data-id="{{item.id}}">{{item.name}}</text>
+            <text class="product-desc" wx:if="{{item.description}}">{{item.description}}</text>
             <view class="product-bottom">
-              <view class="price-row">
-                <text class="price-symbol">¥</text>
-                <text class="price-value">{{item.price}}</text>
-                <text class="price-unit">/{{item.unit || '份'}}</text>
-              </view>
-
-              <!-- 操作按钮 -->
-              <view
-                class="action-btn {{item.hasSpecs ? 'spec-btn' : 'add-btn'}}"
-                bindtap="{{item.hasSpecs ? 'showSpecs' : 'addToCart'}}"
-                data-id="{{item.id}}"
-              >
-                <text wx:if="{{!item.hasSpecs}}">+</text>
-                <text wx:else>选规格</text>
-              </view>
+              <text class="product-price">¥{{item.price}}</text>
+              <view class="add-cart-btn" catchtap="addToCart" data-item="{{item}}">+</view>
             </view>
           </view>
         </view>
+      </view>
+
+      <view class="loading-tip" wx:if="{{loading}}">加载中...</view>
+      <view class="empty-tip" wx:if="{{!loading && products.length === 0}}">
+        <text class="empty-text">该分类暂无商品</text>
       </view>
     </scroll-view>
   </view>
 
-  <!-- 底部购物车栏 -->
   <view class="cart-bar">
-    <view class="cart-left">
-      <!-- 优惠券提示 -->
-      <view class="coupon-tip">
-        <text class="coupon-text">优惠助手</text>
-        <text class="coupon-count">{{couponCount || 1}}张可用</text>
+    <view class="cart-info" bindtap="goToCart">
+      <view class="cart-icon-wrap">
+        <text class="cart-icon">🛒</text>
+        <view class="cart-badge" wx:if="{{cartCount > 0}}">{{cartCount}}</view>
       </view>
-
-      <!-- 购物车信息 -->
-      <view class="cart-info" bindtap="showCart">
-        <view class="cart-icon-wrap">
-          <view class="icon-cart"></view>
-          <view class="cart-badge" wx:if="{{cartCount > 0}}">{{cartCount}}</view>
-        </view>
-        <text class="cart-status">{{cartCount > 0 ? '已选' + cartCount + '件' : '未选购商品'}}</text>
+      <view class="cart-total">
+        <text class="total-label">合计：</text>
+        <text class="total-price" wx:if="{{cartCount > 0}}">查看购物车</text>
+        <text class="total-price" wx:else>空</text>
       </view>
     </view>
-
-    <view class="checkout-btn" bindtap="goToCheckout">
-      <text>去结算</text>
-    </view>
+    <view class="cart-go-btn" bindtap="goToCart">去结算</view>
   </view>
 </view>

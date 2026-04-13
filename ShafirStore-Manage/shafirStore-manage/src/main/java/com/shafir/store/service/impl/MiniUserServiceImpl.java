@@ -11,6 +11,7 @@ import com.shafir.store.repository.MemberRepository;
 import com.shafir.store.repository.RegularUserRepository;
 import com.shafir.store.service.MiniUserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -20,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MiniUserServiceImpl implements MiniUserService {
@@ -187,7 +189,8 @@ public class MiniUserServiceImpl implements MiniUserService {
         userInfo.put("levelName", "普通用户");
 
         LambdaQueryWrapper<MemberLevel> levelWrapper = new LambdaQueryWrapper<>();
-        levelWrapper.orderByAsc(MemberLevel::getMinAmount);
+        levelWrapper.gt(MemberLevel::getLevel, 1);
+        levelWrapper.orderByAsc(MemberLevel::getLevel);
         levelWrapper.last("LIMIT 1");
         MemberLevel nextLevel = memberLevelRepository.selectOne(levelWrapper);
 
@@ -195,8 +198,8 @@ public class MiniUserServiceImpl implements MiniUserService {
             userInfo.put("nextLevelThreshold", nextLevel.getMinAmount());
             userInfo.put("nextLevelName", nextLevel.getName());
         } else {
-            userInfo.put("nextLevelThreshold", 0);
-            userInfo.put("nextLevelName", "无");
+            userInfo.put("nextLevelThreshold", null);
+            userInfo.put("nextLevelName", "最高等级");
         }
         userInfo.put("discount", 1.0);
 
@@ -209,20 +212,26 @@ public class MiniUserServiceImpl implements MiniUserService {
         userInfo.put("phone", member.getPhone());
         userInfo.put("nickname", member.getName());
         userInfo.put("totalConsume", member.getTotalConsume());
-        userInfo.put("level", member.getLevel());
-        userInfo.put("points", member.getPoints());
+        userInfo.put("level", member.getLevel() != null ? member.getLevel() : 1);
+        userInfo.put("points", member.getPoints() != null ? member.getPoints() : 0);
 
         if (member.getLevel() != null) {
             MemberLevel level = memberLevelRepository.selectById(member.getLevel());
             if (level != null) {
                 userInfo.put("levelName", level.getName());
-                userInfo.put("discount", level.getDiscount());
+                userInfo.put("discount", level.getDiscount() != null ? level.getDiscount() : 1.0);
+            } else {
+                userInfo.put("levelName", "普通会员");
+                userInfo.put("discount", 1.0);
             }
+        } else {
+            userInfo.put("levelName", "普通会员");
+            userInfo.put("discount", 1.0);
         }
 
         LambdaQueryWrapper<MemberLevel> levelWrapper = new LambdaQueryWrapper<>();
-        levelWrapper.gt(MemberLevel::getLevel, member.getLevel());
-        levelWrapper.orderByAsc(MemberLevel::getMinAmount);
+        levelWrapper.gt(MemberLevel::getLevel, member.getLevel() != null ? member.getLevel() : 0);
+        levelWrapper.orderByAsc(MemberLevel::getLevel);
         levelWrapper.last("LIMIT 1");
         MemberLevel nextLevel = memberLevelRepository.selectOne(levelWrapper);
 

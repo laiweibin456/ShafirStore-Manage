@@ -1,71 +1,72 @@
-<view class="order-create-page">
-  <!-- 商品清单 -->
+<view class="create-order-page">
   <view class="section">
-    <view class="section-title">商品清单</view>
-    <view class="goods-list">
-      <view class="goods-item" wx:for="{{orderItems}}" wx:key="id">
-        <image class="goods-image" src="{{item.imageUrl}}" mode="aspectFill" />
-        <view class="goods-info">
-          <text class="goods-name">{{item.name}}</text>
-          <text class="goods-price">¥{{item.price}}</text>
+    <view class="section-title">预定商品</view>
+    <view class="order-item" wx:for="{{orderItems}}" wx:key="id">
+      <image class="item-image" src="{{item.imageUrl || '/images/placeholder.jpg'}}" mode="aspectFill" />
+      <view class="item-info">
+        <text class="item-name">{{item.name}}</text>
+        <view class="item-bottom">
+          <text class="item-price">¥{{item.price}}</text>
+          <text class="item-qty">x{{item.quantity}}</text>
         </view>
-        <text class="goods-qty">x{{item.quantity}}</text>
       </view>
     </view>
   </view>
 
-  <!-- 预约取货时间 -->
   <view class="section">
-    <view class="section-title">预约取货时间</view>
-    <picker mode="multiSelector" bindchange="onPickupTimeChange" value="{{pickupTimeIndex}}" range="{{pickupTimeRange}}">
-      <view class="pickup-time-display">
-        <text class="{{hasPickupTime ? '' : 'placeholder'}}">
-          {{hasPickupTime ? pickupTimeDisplay : '请选择取货时间'}}
-        </text>
-        <view class="arrow-down"></view>
+    <view class="section-title">取货时间</view>
+    <view class="pickup-time-row">
+      <view class="picker-wrap">
+        <text class="picker-label">日期</text>
+        <picker mode="selector" range="{{dateRange}}" range-key="label" value="{{dateIndex}}" bindchange="onDateChange">
+          <view class="picker-value">
+            {{dateRange[dateIndex].label}} {{dateRange[dateIndex].display}}
+            <text class="picker-arrow">▼</text>
+          </view>
+        </picker>
       </view>
-    </picker>
+      <view class="picker-wrap">
+        <text class="picker-label">时间</text>
+        <picker mode="multiSelector" range="{{timeRange}}" value="{{timeIndex}}" bindchange="onTimeChange">
+          <view class="picker-value">
+            {{timeRange[0][timeIndex[0]]}}:{{timeRange[1][timeIndex[1]]}}
+            <text class="picker-arrow">▼</text>
+          </view>
+        </picker>
+      </view>
+    </view>
+    <view class="pickup-time-display" wx:if="{{hasPickupTime}}">
+      <text class="pickup-time-text">预计取货：{{pickupTimeDisplay}}</text>
+    </view>
   </view>
 
-  <!-- 订单备注 -->
   <view class="section">
-    <view class="section-title">订单备注</view>
-    <input class="remark-input" placeholder="输入特殊需求（如：需要蜡烛）" bindinput="onRemarkInput" value="{{remark}}" />
+    <view class="section-title">备注</view>
+    <textarea class="remark-input" placeholder="请输入备注信息（选填）" value="{{remark}}" bindinput="onRemarkInput" maxlength="200" />
   </view>
 
-  <!-- 价格明细 -->
-  <view class="price-detail">
+  <view class="section price-section">
     <view class="price-row">
       <text class="price-label">商品金额</text>
       <text class="price-value">¥{{totalAmount}}</text>
     </view>
     <view class="price-row" wx:if="{{discountAmount > 0}}">
-      <text class="price-label">会员折扣</text>
+      <text class="price-label">会员折扣({{discount * 10}}折)</text>
       <text class="price-value discount">-¥{{discountAmount}}</text>
     </view>
     <view class="price-row total">
-      <text class="price-label">合计</text>
-      <text class="price-value">¥{{payAmount}}</text>
-    </view>
-    <view class="price-tip" wx:if="{{discountAmount > 0}}">
-      <text>已享受 {{discount}} 折扣优惠</text>
+      <text class="price-label">实付金额</text>
+      <text class="price-value total-price">¥{{payAmount}}</text>
     </view>
   </view>
 
-  <!-- 提示信息 -->
-  <view class="tips-section">
-    <view class="tips-item">
-      <text class="tips-icon">📝</text>
-      <text class="tips-text">到店后出示订单号取货</text>
-    </view>
-    <view class="tips-item">
-      <text class="tips-icon">⏰</text>
-      <text class="tips-text">请在预约时间到店取货</text>
-    </view>
-  </view>
-
-  <!-- 提交按钮 -->
   <view class="submit-bar">
-    <view class="submit-btn" bindtap="submitOrder">提交预约</view>
+    <view class="submit-info">
+      <text class="submit-label">合计：</text>
+      <text class="submit-price">¥{{payAmount}}</text>
+    </view>
+    <view class="submit-btn {{submitting ? 'disabled' : ''}}" bindtap="submitOrder">
+      {{submitting ? '提交中...' : '提交预约'}}
+    </view>
   </view>
 </view>

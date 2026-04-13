@@ -1,118 +1,83 @@
-// pages/product/list/list.js
 Page({
   data: {
-    products: [],
-    hotProducts: [],
     categories: [],
-    categoryId: null,
-    keyword: '',
-    pageNum: 1,
-    pageSize: 10,
-    hasMore: true,
+    currentCategoryIndex: 0,
+    products: [],
     loading: false,
-    cartCount: 0,
-    cartTotal: 0
+    cartCount: 0
   },
 
-  onLoad(options) {
-    if (options.categoryId) {
-      this.setData({ categoryId: Number(options.categoryId) })
-    }
-    this.loadProducts()
+  onLoad() {
+    this.loadCategories()
   },
 
   onShow() {
-    this.loadCartData()
+    this.loadCartCount()
   },
 
-  loadProducts() {
-    if (this.data.loading) return
+  loadCategories() {
+    var that = this
+    wx.$request.getProductCategories()
+      .then(function(res) {
+        var categories = []
+        if (res.data && res.data.length > 0) {
+          categories = res.data
+        }
+        that.setData({ categories: categories })
+        if (categories.length > 0) {
+          that.loadProductsByCategory(categories[0].id, 0)
+        }
+      })
+      .catch(function(err) {
+        console.error('加载分类失败', err)
+      })
+  },
+
+  switchCategory(e) {
+    var index = e.currentTarget.dataset.index
+    var category = this.data.categories[index]
+    if (!category) return
+    if (index === this.data.currentCategoryIndex) return
+
+    this.setData({
+      currentCategoryIndex: index,
+      products: [],
+      loading: true
+    })
+    this.loadProductsByCategory(category.id, index)
+  },
+
+  loadProductsByCategory(categoryId, categoryIndex) {
+    var that = this
     this.setData({ loading: true })
 
-    wx.$request.getProductList({
-      pageNum: this.data.pageNum,
-      pageSize: this.data.pageSize,
-      name: this.data.keyword,
-      categoryId: this.data.categoryId
-    })
-      .then(res => {
-        const list = res.data.records || []
-        this.setData({
-          products: this.data.pageNum === 1 ? list : this.data.products.concat(list),
-          hasMore: list.length >= this.data.pageSize,
+    wx.$request.getProductList({ pageNum: 1, pageSize: 50, categoryId: categoryId })
+      .then(function(res) {
+        var list = res.data && res.data.records ? res.data.records : (res.data || [])
+        that.setData({
+          products: list,
           loading: false
         })
       })
-      .catch(err => {
+      .catch(function(err) {
         console.error('加载商品失败', err)
-        this.setData({ loading: false })
+        that.setData({ loading: false })
       })
   },
 
-  loadCartData() {
-    const cartItems = wx.getStorageSync('cartItems') || []
-    var cartCount = 0
-    var cartTotal = 0
-    cartItems.forEach(function(item) {
-      cartCount += item.quantity
-      cartTotal += item.price * item.quantity
-    })
-    this.setData({ cartCount: cartCount, cartTotal: cartTotal })
-  },
-
-  onSearch(e) {
-    this.setData({ keyword: e.detail.value, pageNum: 1 })
-    this.loadProducts()
-  },
-
-  selectCategory(e) {
-    const categoryId = e.currentTarget.dataset.id
-    this.setData({ categoryId: categoryId || null, pageNum: 1 })
-    this.loadProducts()
-  },
-
-  loadMore() {
-    if (this.data.hasMore) {
-      this.setData({ pageNum: this.data.pageNum + 1 })
-      this.loadProducts()
-    }
-  },
-
   goToDetail(e) {
-    wx.navigateTo({ url: '/pages/product/detail/detail?id=' + e.currentTarget.dataset.id })
-  },
-
-  goToCart() {
-    wx.switchTab({ url: '/pages/cart/cart' })
+    var id = e.currentTarget.dataset.id
+    wx.navigateTo({ url: '/pages/product/detail/detail?id=' + id })
   },
 
   addToCart(e) {
-    const productId = e.currentTarget.dataset.id
-    const products = this.data.products
-    const hotProducts = this.data.hotProducts
-
-    var product = null
-    for (var i = 0; i < products.length; i++) {
-      if (products[i].id === productId) {
-        product = products[i]
-        break
-      }
-    }
-    if (!product) {
-      for (var i = 0; i < hotProducts.length; i++) {
-        if (hotProducts[i].id === productId) {
-          product = hotProducts[i]
-          break
-        }
-      }
-    }
-
+    var product = e.currentTarget.dataset.item
     if (!product) return
 
-    const cartItems = wx.getStorageSync('cartItems') || []
+    var cartItems = wx.getStorageSync('cartItems') || []
     var existIndex = -1
     for (var i = 0; i < cartItems.length; i++) {
-      if (cartItems[i].id === productId) {
+      if (cartItems[i].id === product.id) {
         existIndex = i
         break
       }
@@ -132,7 +97,20 @@ Page({
     }
 
     wx.setStorageSync('cartItems', cartItems)
-    this.loadCartData()
+    this.loadCartCount()
     wx.showToast({ title: '已加入购物车', icon: 'success' })
+  },
+
+  loadCartCount() {
+    var cartItems = wx.getStorageSync('cartItems') || []
+    var count = 0
+    for (var i = 0; i < cartItems.length; i++) {
+      count += cartItems[i].quantity
+    }
+    this.setData({ cartCount: count })
+  },
+
+  goToCart() {
+    wx.navigateTo({ url: '/pages/cart/cart' })
   }
 })

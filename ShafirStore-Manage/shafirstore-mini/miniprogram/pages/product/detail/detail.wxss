@@ -1,13 +1,15 @@
-/* pages/product/detail/detail.wxss - 商品详情页样式 */
-
 .product-detail-page {
   min-height: 100vh;
   background-color: #F5F5F5;
   padding-bottom: 120rpx;
 }
 
-/* 图片轮播 */
 .image-swiper {
+  height: 750rpx;
+  background-color: #ffffff;
+}
+
+.single-image {
   height: 750rpx;
   background-color: #ffffff;
 }
@@ -17,7 +19,6 @@
   height: 100%;
 }
 
-/* 价格信息 */
 .price-section {
   background-color: #ffffff;
   padding: 30rpx;
@@ -37,7 +38,6 @@
   margin-left: 10rpx;
 }
 
-/* 基本信息 */
 .info-section {
   background-color: #ffffff;
   margin-top: 20rpx;
@@ -65,7 +65,6 @@
   color: #333333;
 }
 
-/* 商品详情 */
 .detail-section {
   background-color: #ffffff;
   margin-top: 20rpx;
@@ -85,7 +84,6 @@
   line-height: 1.6;
 }
 
-/* 底部操作栏 */
 .action-bar {
   position: fixed;
   bottom: 0;
@@ -109,6 +107,7 @@
   flex-direction: column;
   align-items: center;
   margin-right: 40rpx;
+  position: relative;
 }
 
 .iconfont {
@@ -119,6 +118,22 @@
   font-size: 22rpx;
   color: #666666;
   margin-top: 4rpx;
+}
+
+.cart-badge {
+  position: absolute;
+  top: -8rpx;
+  right: -16rpx;
+  min-width: 32rpx;
+  height: 32rpx;
+  background-color: #FF4D4F;
+  color: #FFFFFF;
+  font-size: 20rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6rpx;
 }
 
 .action-buttons {

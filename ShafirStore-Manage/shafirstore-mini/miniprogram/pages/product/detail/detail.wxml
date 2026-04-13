@@ -1,41 +1,39 @@
-<!--pages/product/detail/detail.wxml-->
 <view class="product-detail-page">
-  <!-- 图片轮播 -->
-  <swiper class="image-swiper" indicator-dots circular>
-    <swiper-item wx:for="{{product.images}}" wx:key="index">
+  <swiper class="image-swiper" indicator-dots circular wx:if="{{product.imageList.length > 0}}">
+    <swiper-item wx:for="{{product.imageList}}" wx:key="index">
       <image class="product-image" src="{{item}}" mode="aspectFill" />
     </swiper-item>
   </swiper>
 
-  <!-- 价格信息 -->
-  <view class="price-section">
-    <text class="price">¥{{product.price}}</text>
-    <text class="unit">/{{product.unit}}</text>
+  <view class="single-image" wx:if="{{product.imageList.length === 0 && product.imageUrl}}">
+    <image class="product-image" src="{{product.imageUrl}}" mode="aspectFill" />
   </view>
 
-  <!-- 基本信息 -->
+  <view class="price-section">
+    <text class="price">¥{{product.price}}</text>
+    <text class="unit" wx:if="{{product.unit}}">/{{product.unit}}</text>
+  </view>
+
   <view class="info-section">
     <view class="info-row">
       <text class="info-label">名称</text>
       <text class="info-value">{{product.name}}</text>
     </view>
-    <view class="info-row">
+    <view class="info-row" wx:if="{{product.shelfLifeDays}}">
       <text class="info-label">保质期</text>
       <text class="info-value">{{product.shelfLifeDays}}天</text>
     </view>
-    <view class="info-row">
-      <text class="info-label">库存</text>
-      <text class="info-value">{{product.stockQuantity}}件</text>
+    <view class="info-row" wx:if="{{product.categoryName}}">
+      <text class="info-label">分类</text>
+      <text class="info-value">{{product.categoryName}}</text>
     </view>
   </view>
 
-  <!-- 商品详情 -->
-  <view class="detail-section">
+  <view class="detail-section" wx:if="{{product.description}}">
     <text class="section-title">商品详情</text>
     <text class="detail-content">{{product.description}}</text>
   </view>
 
-  <!-- 底部操作栏 -->
   <view class="action-bar">
     <view class="action-icons">
       <view class="icon-item" bindtap="goToHome">
@@ -45,6 +43,7 @@
       <view class="icon-item" bindtap="goToCart">
         <text class="iconfont">🛒</text>
         <text class="icon-text">购物车</text>
+        <view class="cart-badge" wx:if="{{cartCount > 0}}">{{cartCount}}</view>
       </view>
     </view>
     <view class="action-buttons">

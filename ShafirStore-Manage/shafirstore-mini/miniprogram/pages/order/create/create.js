@@ -1,5 +1,4 @@
 Page({
-
   data: {
     orderItems: [],
     totalAmount: 0,
@@ -7,66 +6,98 @@ Page({
     payAmount: 0,
     discount: 1,
     remark: '',
+    pickupDate: '',
     pickupTime: '',
     pickupTimeDisplay: '',
     hasPickupTime: false,
-    pickupTimeIndex: [0, 0],
-    pickupTimeRange: [[], []],
-    minDate: null
+    dateIndex: 0,
+    dateRange: [],
+    timeIndex: [0, 0],
+    timeRange: [[], []],
+    submitting: false
   },
 
-  onLoad(options) {
-    this.initPickupTimeRange()
+  onLoad() {
+    this.initDateRange()
+    this.initTimeRange()
     this.loadCartData()
     this.loadUserDiscount()
   },
 
-  initPickupTimeRange() {
-    const now = new Date()
-    const hours = []
-    const minutes = ['00', '30']
+  initDateRange() {
+    var dateRange = []
+    for (var i = 0; i < 7; i++) {
+      var d = new Date()
+      d.setDate(d.getDate() + i)
+      var month = d.getMonth() + 1
+      var day = d.getDate()
+      var weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+      var label = ''
+      if (i === 0) {
+        label = '今天'
+      } else if (i === 1) {
+        label = '明天'
+      } else if (i === 2) {
+        label = '后天'
+      } else {
+        label = weekDays[d.getDay()]
+      }
+      dateRange.push({
+        label: label,
+        date: d.getFullYear() + '-' + (month < 10 ? '0' + month : '' + month) + '-' + (day < 10 ? '0' + day : '' + day),
+        display: month + '月' + day + '日'
+      })
+    }
+    this.setData({ dateRange: dateRange })
+  },
 
-    for (let i = 9; i <= 20; i++) {
+  initTimeRange() {
+    var hours = []
+    var minutes = ['00', '30']
+    for (var i = 9; i <= 20; i++) {
       hours.push(i < 10 ? '0' + i : '' + i)
     }
-
-    this.setData({
-      pickupTimeRange: [hours, minutes],
-      minDate: now.getTime()
-    })
+    this.setData({ timeRange: [hours, minutes] })
   },
 
   loadCartData() {
-    const cartItems = wx.getStorageSync('cartItems') || []
-    if (cartItems.length === 0) {
-      wx.showToast({ title: '购物车为空', icon: 'none' })
-      setTimeout(() => {
+    var cartItems = wx.getStorageSync('cartItems') || []
+    var selectedItems = []
+    for (var i = 0; i < cartItems.length; i++) {
+      if (cartItems[i].selected) {
+        selectedItems.push(cartItems[i])
+      }
+    }
+
+    if (selectedItems.length === 0) {
+      wx.showToast({ title: '请先选择商品', icon: 'none' })
+      setTimeout(function() {
         wx.navigateBack()
       }, 1500)
       return
     }
 
-    let totalAmount = 0
-    cartItems.forEach(item => {
-      totalAmount += item.price * item.quantity
-    })
+    var totalAmount = 0
+    for (var j = 0; j < selectedItems.length; j++) {
+      totalAmount += selectedItems[j].price * selectedItems[j].quantity
+    }
 
     this.setData({
-      orderItems: cartItems,
+      orderItems: selectedItems,
       totalAmount: totalAmount.toFixed(2),
       payAmount: totalAmount.toFixed(2)
     })
   },
 
   loadUserDiscount() {
-    const userInfo = wx.getStorageSync('userInfo')
-    const userType = wx.getStorageSync('userType')
+    var userInfo = wx.getStorageSync('userInfo')
+    var userType = wx.getStorageSync('userType')
 
     if (userType == 2 && userInfo && userInfo.discount) {
-      const discount = userInfo.discount
-      const totalAmount = this.data.totalAmount
-      const discountAmount = totalAmount * (1 - discount)
-      const payAmount = totalAmount * discount
+      var discount = userInfo.discount
+      var totalAmount = parseFloat(this.data.totalAmount)
+      var discountAmount = totalAmount * (1 - discount)
+      var payAmount = totalAmount * discount
 
       this.setData({
         discount: discount,
@@ -76,27 +107,35 @@ Page({
     }
   },
 
-  onPickupTimeChange(e) {
-    const index = e.detail.value
-    const hours = this.data.pickupTimeRange[0]
-    const minutes = this.data.pickupTimeRange[1]
+  onDateChange(e) {
+    var index = e.detail.value
+    this.setData({ dateIndex: index })
+    this.updatePickupTimeDisplay()
+  },
 
-    const hour = hours[index[0]]
-    const minute = minutes[index[1]]
+  onTimeChange(e) {
+    var index = e.detail.value
+    this.setData({ timeIndex: index })
+    this.updatePickupTimeDisplay()
+  },
 
-    const now = new Date()
-    const year = now.getFullYear()
-    const month = now.getMonth() + 1
-    const day = now.getDate()
+  updatePickupTimeDisplay() {
+    var dateItem = this.data.dateRange[this.data.dateIndex]
+    var hours = this.data.timeRange[0]
+    var minutes = this.data.timeRange[1]
+    var hour = hours[this.data.timeIndex[0]]
+    var minute = minutes[this.data.timeIndex[1]]
 
-    const pickupTime = year + '-' + month.toString().padStart(2, '0') + '-' + day.toString().padStart(2, '0') + ' ' + hour + ':' + minute + ':00'
-    const pickupTimeDisplay = month + '月' + day + '日 ' + hour + ':' + minute
+    if (!dateItem || !hour || !minute) return
+
+    var pickupTime = dateItem.date + ' ' + hour + ':' + minute + ':00'
+    var pickupTimeDisplay = dateItem.display + ' ' + hour + ':' + minute
 
     this.setData({
+      pickupDate: dateItem.date,
       pickupTime: pickupTime,
       pickupTimeDisplay: pickupTimeDisplay,
-      hasPickupTime: true,
-      pickupTimeIndex: index
+      hasPickupTime: true
     })
   },
 
@@ -110,34 +149,50 @@ Page({
       return
     }
 
-    const token = wx.getStorageSync('token')
+    var token = wx.getStorageSync('token')
     if (!token) {
       wx.showToast({ title: '请先登录', icon: 'none' })
-      setTimeout(() => {
+      setTimeout(function() {
         wx.navigateTo({ url: '/pages/member/login/login' })
       }, 1500)
       return
     }
 
-    const productIds = this.data.orderItems.map(item => item.id)
-    const quantities = this.data.orderItems.map(item => item.quantity)
+    if (this.data.submitting) return
+    this.setData({ submitting: true })
 
+    var productIds = []
+    var quantities = []
+    for (var i = 0; i < this.data.orderItems.length; i++) {
+      productIds.push(this.data.orderItems[i].id)
+      quantities.push(this.data.orderItems[i].quantity)
+    }
+
+    var that = this
     wx.$request.createReservationOrder({
       productIds: productIds,
       quantities: quantities,
       pickupTime: this.data.pickupTime,
       remark: this.data.remark
     })
-      .then(res => {
-        wx.removeStorageSync('cartItems')
-        wx.showToast({ title: '预约成功', icon: 'success' })
+      .then(function(res) {
+        var cartItems = wx.getStorageSync('cartItems') || []
+        var remainingItems = []
+        for (var i = 0; i < cartItems.length; i++) {
+          if (!cartItems[i].selected) {
+            remainingItems.push(cartItems[i])
+          }
+        }
+        wx.setStorageSync('cartItems', remainingItems)
 
-        setTimeout(() => {
+        wx.showToast({ title: '预约成功', icon: 'success' })
+        setTimeout(function() {
           wx.switchTab({ url: '/pages/order/list/list' })
         }, 1500)
       })
-      .catch(err => {
+      .catch(function(err) {
         console.error('创建订单失败', err)
+        that.setData({ submitting: false })
       })
   }
 })

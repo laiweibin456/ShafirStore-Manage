@@ -1,9 +1,4 @@
-// pages/index/index.js
 Page({
-
-  /**
-   * 页面的初始数据
-   */
   data: {
     userInfo: {
       nickName: '',
@@ -18,86 +13,89 @@ Page({
     hasUserInfo: false
   },
 
-  /**
-   * 生命周期函数--监听页面加载
-   */
   onLoad(options) {
-    this.checkUserInfo();
-    this.loadMemberInfo();
+    this.checkUserInfo()
+    this.loadMemberInfo()
   },
 
-  /**
-   * 生命周期函数--监听页面显示
-   */
   onShow() {
-    this.checkUserInfo();
+    this.checkUserInfo()
   },
 
-  /**
-   * 检查用户信息
-   */
   checkUserInfo() {
-    const userInfo = wx.getStorageSync('userInfo');
-    if (userInfo) {
+    var userInfo = wx.getStorageSync('userInfo')
+    var token = wx.getStorageSync('token')
+    if (userInfo && token) {
       this.setData({
         userInfo: userInfo,
         hasUserInfo: true
-      });
-    }
-  },
-
-  /**
-   * 加载会员信息
-   */
-  loadMemberInfo() {
-    // TODO: 从后端API获取会员信息
-    const memberInfo = wx.getStorageSync('memberInfo');
-    if (memberInfo) {
+      })
+    } else {
       this.setData({
-        memberInfo: memberInfo
-      });
+        hasUserInfo: false
+      })
     }
   },
 
-  /**
-   * 跳转到会员中心
-   */
+  loadMemberInfo() {
+    var token = wx.getStorageSync('token')
+    if (!token) return
+
+    var that = this
+    wx.$request.getMiniUserInfo()
+      .then(function(res) {
+        if (res.data) {
+          var userType = res.data.userType
+          var levelName = '普通会员'
+          if (userType === 2) {
+            levelName = 'VIP会员'
+          }
+          that.setData({
+            memberInfo: {
+              levelName: levelName,
+              balance: res.data.balance || 0,
+              points: res.data.points || 0,
+              coupons: res.data.coupons || 0
+            }
+          })
+          wx.setStorageSync('userType', userType)
+          wx.setStorageSync('userInfo', res.data)
+        }
+      })
+      .catch(function(err) {
+        console.error('加载会员信息失败', err)
+      })
+  },
+
   goToMember() {
     wx.navigateTo({
       url: '/pages/member/index/index'
-    });
+    })
   },
 
-  /**
-   * 跳转到到店自提
-   */
   goToPickup() {
-    wx.navigateTo({
-      url: '/pages/product/list/list?mode=pickup'
-    });
+    wx.switchTab({
+      url: '/pages/product/list/list'
+    })
   },
 
-  /**
-   * 跳转到自营外卖
-   */
   goToTakeaway() {
-    wx.navigateTo({
-      url: '/pages/product/list/list?mode=takeaway'
-    });
+    wx.switchTab({
+      url: '/pages/product/list/list'
+    })
   },
 
-  /**
-   * 跳转到积分兑换
-   */
   goToPoints() {
+    var token = wx.getStorageSync('token')
+    if (!token) {
+      wx.navigateTo({ url: '/pages/member/login/login' })
+      return
+    }
     wx.navigateTo({
       url: '/pages/member/points/points'
-    });
+    })
   },
 
-  /**
-   * 跳转到门店地址
-   */
   goToAddress() {
     wx.openLocation({
       latitude: 30.5728,
@@ -105,25 +103,19 @@ Page({
       name: '莎菲尔菓子',
       address: '四川省成都市武侯区xxx路xxx号',
       scale: 15
-    });
+    })
   },
 
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
   onPullDownRefresh() {
-    this.loadMemberInfo();
-    wx.stopPullDownRefresh();
+    this.loadMemberInfo()
+    wx.stopPullDownRefresh()
   },
 
-  /**
-   * 用户点击右上角分享
-   */
   onShareAppMessage() {
     return {
       title: '莎菲尔菓子 - 精致烘焙·甜蜜生活',
       path: '/pages/index/index',
       imageUrl: '/images/share-poster.jpg'
-    };
+    }
   }
 })
