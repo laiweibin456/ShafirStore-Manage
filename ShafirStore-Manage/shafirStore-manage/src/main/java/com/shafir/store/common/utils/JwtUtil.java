@@ -9,9 +9,8 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -31,10 +30,17 @@ public class JwtUtil {
     }
 
     public String generateToken(Long userId, String username, String role) {
+        return generateToken(userId, username, role, null, null);
+    }
+
+    public String generateToken(Long userId, String username, String role,
+                                Long storeId, List<Long> storeIds) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
         claims.put("username", username);
         claims.put("role", role);
+        claims.put("storeId", storeId);
+        claims.put("storeIds", storeIds);
 
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
@@ -100,6 +106,38 @@ public class JwtUtil {
     public String getRoleFromToken(String token) {
         Claims claims = parseToken(token);
         return claims.get("role", String.class);
+    }
+
+    public Long getStoreIdFromToken(String token) {
+        Claims claims = parseToken(token);
+        Object storeId = claims.get("storeId");
+        if (storeId == null) {
+            return null;
+        }
+        if (storeId instanceof Integer) {
+            return ((Integer) storeId).longValue();
+        }
+        return ((Long) storeId);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Long> getStoreIdsFromToken(String token) {
+        Claims claims = parseToken(token);
+        Object storeIds = claims.get("storeIds");
+        if (storeIds == null) {
+            return List.of();
+        }
+        if (storeIds instanceof List) {
+            return ((List<?>) storeIds).stream()
+                    .map(obj -> {
+                        if (obj instanceof Integer) {
+                            return ((Integer) obj).longValue();
+                        }
+                        return (Long) obj;
+                    })
+                    .collect(Collectors.toList());
+        }
+        return List.of();
     }
 
     public boolean isTokenExpired(String token) {

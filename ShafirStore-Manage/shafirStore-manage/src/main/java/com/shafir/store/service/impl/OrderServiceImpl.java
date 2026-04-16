@@ -3,6 +3,7 @@ package com.shafir.store.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.shafir.store.common.context.StoreContext;
 import com.shafir.store.common.exception.BusinessException;
 import com.shafir.store.entity.*;
 import com.shafir.store.repository.*;
@@ -371,8 +372,10 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private String generateOrderNo() {
-        String date = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE);
+        Long storeId = StoreContext.getCurrentStoreId();
+        String storePrefix = storeId != null ? String.format("%02d", storeId % 100) : "00";
+        String date = LocalDate.now().format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE);
         String random = String.format("%04d", (int) (Math.random() * 10000));
-        return "ORD" + date + random;
+        return "ORD" + storePrefix + date + random;
     }
 }

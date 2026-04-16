@@ -1,9 +1,12 @@
 package com.shafir.store.controller;
 
 import com.shafir.store.common.result.Result;
+import com.shafir.store.security.SecurityUser;
 import com.shafir.store.service.StatisticsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -85,6 +88,14 @@ public class StatisticsController {
     public Result<Map<String, Object>> getOverview() {
         log.info("获取经营概览");
         Map<String, Object> data = statisticsService.getOverview();
+        return Result.success(data);
+    }
+
+    @GetMapping("/cross-store")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
+    public Result<Map<String, Object>> getCrossStoreOverview(@AuthenticationPrincipal SecurityUser securityUser) {
+        log.info("获取跨店铺统计概览: userId={}", securityUser.getUserId());
+        Map<String, Object> data = statisticsService.getCrossStoreOverview();
         return Result.success(data);
     }
 }

@@ -1,13 +1,17 @@
-// utils/request.js - API请求封装
-const BASE_URL = 'http://localhost:8080/api'
+var BASE_URL = 'http://localhost:8080/api'
 
 function getToken() {
   return wx.getStorageSync('token') || ''
 }
 
+function getStoreId() {
+  return wx.getStorageSync('currentStoreId') || ''
+}
+
 function request(options) {
   return new Promise(function(resolve, reject) {
     var token = getToken()
+    var storeId = getStoreId()
     var url = BASE_URL + options.url
 
     if (options.params) {
@@ -18,14 +22,21 @@ function request(options) {
       if (query) url += '?' + query
     }
 
+    var header = {
+      'Content-Type': 'application/json'
+    }
+    if (token) {
+      header['Authorization'] = 'Bearer ' + token
+    }
+    if (storeId) {
+      header['X-Store-Id'] = storeId
+    }
+
     wx.request({
       url: url,
       method: options.method || 'GET',
       data: options.data,
-      header: {
-        'Content-Type': 'application/json',
-        'Authorization': token ? 'Bearer ' + token : ''
-      },
+      header: header,
       timeout: 30000,
       success: function(res) {
         if (res.statusCode === 200) {
@@ -68,5 +79,7 @@ module.exports = {
   getProductCategories: function() { return request({ url: '/categories' }) },
   getOrderList: function(params) { return request({ url: '/orders', params: params }) },
   getOrderDetail: function(id) { return request({ url: '/orders/' + id }) },
-  cancelOrder: function(id) { return request({ url: '/orders/' + id + '/cancel', method: 'PUT' }) }
+  cancelOrder: function(id) { return request({ url: '/orders/' + id + '/cancel', method: 'PUT' }) },
+  getAllStores: function() { return request({ url: '/stores/all' }) },
+  getStoreDetail: function(id) { return request({ url: '/stores/' + id }) }
 }

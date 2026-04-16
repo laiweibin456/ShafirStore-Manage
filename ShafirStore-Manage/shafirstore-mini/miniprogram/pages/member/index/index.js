@@ -1,3 +1,5 @@
+var app = getApp()
+
 Page({
 
   data: {
@@ -8,7 +10,8 @@ Page({
     nextLevelAmount: 0,
     showDiscount: false,
     discountText: '1.0',
-    isMaxLevel: false
+    isMaxLevel: false,
+    currentStoreName: ''
   },
 
   onLoad() {
@@ -19,6 +22,16 @@ Page({
     this.checkLoginStatus()
     if (this.data.hasUserInfo) {
       this.loadUserInfo()
+    }
+    this.updateStoreInfo()
+  },
+
+  updateStoreInfo() {
+    var store = app.globalData.currentStore
+    if (store) {
+      this.setData({ currentStoreName: store.storeName })
+    } else {
+      this.setData({ currentStoreName: '' })
     }
   },
 
@@ -152,18 +165,36 @@ Page({
   },
 
   goToAddress() {
-    wx.openLocation({
-      latitude: 30.5728,
-      longitude: 104.0668,
-      name: '莎菲尔菓子',
-      address: '四川省成都市武侯区xxx路xxx号',
-      scale: 15
-    })
+    var store = app.globalData.currentStore
+    if (store && store.latitude && store.longitude) {
+      wx.openLocation({
+        latitude: store.latitude,
+        longitude: store.longitude,
+        name: store.storeName || '莎菲尔菓子',
+        address: store.address || '',
+        scale: 15
+      })
+    } else {
+      wx.openLocation({
+        latitude: 30.5728,
+        longitude: 104.0668,
+        name: '莎菲尔菓子',
+        address: '四川省成都市武侯区xxx路xxx号',
+        scale: 15
+      })
+    }
   },
 
   callService() {
+    var store = app.globalData.currentStore
     wx.makePhoneCall({
-      phoneNumber: '028-88888888'
+      phoneNumber: store && store.phone ? store.phone : '028-88888888'
+    })
+  },
+
+  goToStoreSelect() {
+    wx.navigateTo({
+      url: '/pages/store/select/select'
     })
   },
 

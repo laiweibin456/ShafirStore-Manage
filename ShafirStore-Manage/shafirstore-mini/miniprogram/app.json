@@ -11,6 +11,7 @@
     "pages/member/points/points",
     "pages/member/login/login",
     "pages/member/register/register",
+    "pages/store/select/select",
     "pages/user/user"
   ],
   "window": {

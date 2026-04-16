@@ -3,19 +3,23 @@ package com.shafir.store.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.shafir.store.common.context.StoreContext;
 import com.shafir.store.common.exception.BusinessException;
 import com.shafir.store.entity.Member;
 import com.shafir.store.entity.MemberLevel;
 import com.shafir.store.entity.MemberPointsRecord;
+import com.shafir.store.entity.MemberStoreRel;
 import com.shafir.store.repository.MemberLevelRepository;
 import com.shafir.store.repository.MemberPointsRecordRepository;
 import com.shafir.store.repository.MemberRepository;
+import com.shafir.store.repository.MemberStoreRelRepository;
 import com.shafir.store.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -26,6 +30,7 @@ public class MemberServiceImpl implements MemberService {
     private final MemberRepository memberRepository;
     private final MemberLevelRepository memberLevelRepository;
     private final MemberPointsRecordRepository memberPointsRecordRepository;
+    private final MemberStoreRelRepository memberStoreRelRepository;
 
     @Override
     public Member getById(Long id) {
@@ -104,7 +109,7 @@ public class MemberServiceImpl implements MemberService {
             member.setPoints(0);
         }
         if (member.getTotalConsume() == null) {
-            member.setTotalConsume(java.math.BigDecimal.ZERO);
+            member.setTotalConsume(BigDecimal.ZERO);
         }
         if (member.getLevel() == null) {
             member.setLevel(1);
@@ -113,7 +118,16 @@ public class MemberServiceImpl implements MemberService {
             member.setRegisterTime(LocalDateTime.now());
         }
 
-        return memberRepository.insert(member) > 0;
+        boolean inserted = memberRepository.insert(member) > 0;
+
+        if (inserted) {
+            Long storeId = StoreContext.getCurrentStoreId();
+            if (storeId != null) {
+                getOrCreateMemberStoreRel(member.getId(), storeId);
+            }
+        }
+
+        return inserted;
     }
 
     @Override
@@ -152,29 +166,35 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public boolean updatePoints(Long id, Integer points, Integer type, Long orderId, String remark) {
         Member member = memberRepository.selectById(id);
         if (member == null) {
             throw new BusinessException("会员不存在");
         }
 
+        Long storeId = StoreContext.getCurrentStoreId();
+        if (storeId == null) {
+            throw new BusinessException("未指定当前店铺");
+        }
+
+        MemberStoreRel rel = getOrCreateMemberStoreRel(id, storeId);
+
         int newBalance;
         if (type == 1) {
-            newBalance = member.getPoints() + points;
+            newBalance = rel.getPoints() + points;
         } else if (type == 2) {
-            if (member.getPoints() < points) {
+            if (rel.getPoints() < points) {
                 throw new BusinessException("积分余额不足");
             }
-            newBalance = member.getPoints() - points;
+            newBalance = rel.getPoints() - points;
         } else {
             throw new BusinessException("积分操作类型错误");
         }
 
-        Member updateMember = new Member();
-        updateMember.setId(id);
-        updateMember.setPoints(newBalance);
-        memberRepository.updateById(updateMember);
+        rel.setPoints(newBalance);
+        rel.setUpdateTime(LocalDateTime.now());
+        memberStoreRelRepository.updateById(rel);
 
         MemberPointsRecord record = new MemberPointsRecord();
         record.setMemberId(id);
@@ -209,11 +229,42 @@ public class MemberServiceImpl implements MemberService {
         return members;
     }
 
+    private MemberStoreRel getOrCreateMemberStoreRel(Long memberId, Long storeId) {
+        MemberStoreRel rel = memberStoreRelRepository.findByMemberIdAndStoreId(memberId, storeId);
+        if (rel == null) {
+            rel = new MemberStoreRel();
+            rel.setMemberId(memberId);
+            rel.setStoreId(storeId);
+            rel.setTotalConsume(BigDecimal.ZERO);
+            rel.setPoints(0);
+            rel.setLevel(1);
+            rel.setStatus(1);
+            rel.setCreateTime(LocalDateTime.now());
+            rel.setUpdateTime(LocalDateTime.now());
+            memberStoreRelRepository.insert(rel);
+        }
+        return rel;
+    }
+
     private void enrichMemberInfo(Member member) {
         if (member.getLevel() != null) {
             MemberLevel level = memberLevelRepository.selectById(member.getLevel());
             if (level != null) {
                 member.setLevelName(level.getName());
+            }
+        }
+
+        Long storeId = StoreContext.getCurrentStoreId();
+        if (storeId != null) {
+            MemberStoreRel rel = memberStoreRelRepository.findByMemberIdAndStoreId(member.getId(), storeId);
+            if (rel != null) {
+                member.setPoints(rel.getPoints());
+                member.setTotalConsume(rel.getTotalConsume());
+                member.setLevel(rel.getLevel());
+                MemberLevel level = memberLevelRepository.selectById(rel.getLevel());
+                if (level != null) {
+                    member.setLevelName(level.getName());
+                }
             }
         }
     }

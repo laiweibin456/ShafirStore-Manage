@@ -16,6 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -35,8 +36,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Long userId = jwtUtil.getUserIdFromToken(token);
                 String username = jwtUtil.getUsernameFromToken(token);
                 String role = jwtUtil.getRoleFromToken(token);
+                Long storeId = jwtUtil.getStoreIdFromToken(token);
+                List<Long> storeIds = jwtUtil.getStoreIdsFromToken(token);
 
-                SecurityUser securityUser = new SecurityUser(userId, username, role,
+                SecurityUser securityUser = new SecurityUser(userId, username, role, storeId, storeIds,
                         Collections.singletonList(new SimpleGrantedAuthority(role)));
 
                 UsernamePasswordAuthenticationToken authentication =

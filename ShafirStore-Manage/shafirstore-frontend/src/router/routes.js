@@ -100,6 +100,18 @@ export default [
         name: 'MemberStatistics',
         component: () => import('@/views/statistics/MemberStatistics.vue'),
         meta: { title: '会员统计', requiresAuth: true }
+      },
+      {
+        path: 'admin/stores',
+        name: 'StoreManage',
+        component: () => import('@/views/admin/StoreManage.vue'),
+        meta: { title: '店铺管理', requiresAuth: true, requiredRole: 'ROLE_SUPER_ADMIN' }
+      },
+      {
+        path: 'admin/dashboard',
+        name: 'AdminDashboard',
+        component: () => import('@/views/admin/Dashboard.vue'),
+        meta: { title: '总控仪表盘', requiresAuth: true, requiredRole: 'ROLE_SUPER_ADMIN' }
       }
     ]
   }

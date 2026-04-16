@@ -96,7 +96,16 @@
         <view class="icon-store"></view>
       </view>
       <text class="menu-text">门店地址</text>
-      <text class="menu-desc">查看门店信息</text>
+      <text class="menu-desc">{{currentStoreName || '查看门店信息'}}</text>
+      <view class="icon-arrow-small"></view>
+    </view>
+
+    <view class="menu-item" bindtap="goToStoreSelect">
+      <view class="menu-icon">
+        <view class="icon-setting"></view>
+      </view>
+      <text class="menu-text">切换门店</text>
+      <text class="menu-desc">{{currentStoreName || '请选择门店'}}</text>
       <view class="icon-arrow-small"></view>
     </view>
 

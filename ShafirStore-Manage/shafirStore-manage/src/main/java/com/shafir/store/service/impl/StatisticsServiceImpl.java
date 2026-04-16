@@ -1,11 +1,13 @@
 package com.shafir.store.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.shafir.store.common.context.StoreContext;
 import com.shafir.store.entity.*;
 import com.shafir.store.repository.*;
 import com.shafir.store.service.StatisticsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -27,6 +29,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     private final ProductRepository productRepository;
     private final InventoryRepository inventoryRepository;
     private final MemberRepository memberRepository;
+    private final JdbcTemplate jdbcTemplate;
 
     private static final Map<Integer, String> LEVEL_NAME_MAP = Map.of(
             1, "普通会员",
@@ -37,6 +40,94 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     @Override
     public Map<String, Object> getDailySales(Integer days) {
+        Map<String, Object> result = new HashMap<>();
+        List<Map<String, Object>> salesData = new ArrayList<>();
+        List<String> dates = new ArrayList<>();
+        List<BigDecimal> amounts = new ArrayList<>();
+        List<Integer> counts = new ArrayList<>();
+
+        LocalDate today = LocalDate.now();
+        LocalDate startDate = today.minusDays(days - 1);
+
+        String sql = "SELECT DATE(create_time) AS sale_date, " +
+                "COUNT(*) AS order_count, " +
+                "COALESCE(SUM(pay_amount), 0) AS total_amount " +
+                "FROM sale_order " +
+                "WHERE create_time BETWEEN ? AND ? " +
+                "AND status = 1 AND order_type = 1 " +
+                "GROUP BY DATE(create_time) " +
+                "ORDER BY sale_date";
+
+        List<Map<String, Object>> dbData;
+        try {
+            dbData = jdbcTemplate.queryForList(sql,
+                    startDate.atStartOfDay(),
+                    today.atTime(LocalTime.MAX));
+        } catch (Exception e) {
+            log.warn("SQL聚合查询失败，回退到内存计算: {}", e.getMessage());
+            return getDailySalesFallback(days);
+        }
+
+        Map<String, Map<String, Object>> dataMap = new LinkedHashMap<>();
+        for (Map<String, Object> row : dbData) {
+            String dateStr = null;
+            Object dateObj = row.get("sale_date");
+            if (dateObj instanceof java.sql.Date) {
+                dateStr = ((java.sql.Date) dateObj).toLocalDate().format(DateTimeFormatter.ofPattern("MM-dd"));
+            } else if (dateObj != null) {
+                dateStr = dateObj.toString();
+            }
+            if (dateStr != null) {
+                dataMap.put(dateStr, row);
+            }
+        }
+
+        for (int i = days - 1; i >= 0; i--) {
+            LocalDate date = today.minusDays(i);
+            String dateStr = date.format(DateTimeFormatter.ofPattern("MM-dd"));
+            dates.add(dateStr);
+
+            Map<String, Object> dayData = dataMap.get(dateStr);
+            if (dayData != null) {
+                BigDecimal dayAmount = toBigDecimal(dayData.get("total_amount"));
+                int dayCount = toInt(dayData.get("order_count"));
+                amounts.add(dayAmount);
+                counts.add(dayCount);
+
+                Map<String, Object> item = new HashMap<>();
+                item.put("date", dateStr);
+                item.put("amount", dayAmount);
+                item.put("count", dayCount);
+                salesData.add(item);
+            } else {
+                amounts.add(BigDecimal.ZERO);
+                counts.add(0);
+
+                Map<String, Object> item = new HashMap<>();
+                item.put("date", dateStr);
+                item.put("amount", BigDecimal.ZERO);
+                item.put("count", 0);
+                salesData.add(item);
+            }
+        }
+
+        result.put("dates", dates);
+        result.put("amounts", amounts);
+        result.put("counts", counts);
+        result.put("data", salesData);
+
+        BigDecimal totalAmount = amounts.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+        int totalCount = counts.stream().reduce(0, Integer::sum);
+        BigDecimal avgAmount = totalCount > 0 ? totalAmount.divide(BigDecimal.valueOf(totalCount), 2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
+
+        result.put("totalAmount", totalAmount);
+        result.put("totalCount", totalCount);
+        result.put("avgAmount", avgAmount);
+
+        return result;
+    }
+
+    private Map<String, Object> getDailySalesFallback(Integer days) {
         Map<String, Object> result = new HashMap<>();
         List<Map<String, Object>> salesData = new ArrayList<>();
         List<String> dates = new ArrayList<>();
@@ -434,5 +525,81 @@ public class StatisticsServiceImpl implements StatisticsService {
         result.put("avgAmount", avgAmount);
 
         return result;
+    }
+
+    @Override
+    public Map<String, Object> getCrossStoreOverview() {
+        Map<String, Object> result = new HashMap<>();
+
+        boolean oldIgnore = StoreContext.isIgnoreTenant();
+        try {
+            StoreContext.setIgnoreTenant(true);
+
+            String storeSql = "SELECT s.id AS storeId, s.store_name AS storeName, " +
+                    "COALESCE(o.order_count, 0) AS orderCount, " +
+                    "COALESCE(o.total_amount, 0) AS totalAmount " +
+                    "FROM store s " +
+                    "LEFT JOIN (" +
+                    "  SELECT store_id, COUNT(*) AS order_count, SUM(pay_amount) AS total_amount " +
+                    "  FROM sale_order WHERE status = 1 AND order_type = 1 " +
+                    "  AND create_time >= CURDATE() " +
+                    "  GROUP BY store_id" +
+                    ") o ON s.id = o.store_id " +
+                    "WHERE s.status = 1 " +
+                    "ORDER BY s.id";
+
+            List<Map<String, Object>> storeStats;
+            try {
+                storeStats = jdbcTemplate.queryForList(storeSql);
+            } catch (Exception e) {
+                log.warn("跨店铺统计SQL查询失败: {}", e.getMessage());
+                storeStats = List.of();
+            }
+
+            result.put("storeStats", storeStats);
+
+            String totalSql = "SELECT COUNT(*) AS totalCount, COALESCE(SUM(pay_amount), 0) AS totalAmount " +
+                    "FROM sale_order WHERE status = 1 AND order_type = 1 AND create_time >= CURDATE()";
+
+            try {
+                Map<String, Object> totalData = jdbcTemplate.queryForMap(totalSql);
+                result.put("todayTotalCount", toInt(totalData.get("totalCount")));
+                result.put("todayTotalAmount", toBigDecimal(totalData.get("totalAmount")));
+            } catch (Exception e) {
+                result.put("todayTotalCount", 0);
+                result.put("todayTotalAmount", BigDecimal.ZERO);
+            }
+
+            result.put("storeCount", storeStats.size());
+        } finally {
+            if (oldIgnore) {
+                StoreContext.setIgnoreTenant(true);
+            } else {
+                StoreContext.setIgnoreTenant(false);
+            }
+        }
+
+        return result;
+    }
+
+    private BigDecimal toBigDecimal(Object value) {
+        if (value == null) return BigDecimal.ZERO;
+        if (value instanceof BigDecimal) return (BigDecimal) value;
+        if (value instanceof Number) return BigDecimal.valueOf(((Number) value).doubleValue());
+        try {
+            return new BigDecimal(value.toString());
+        } catch (Exception e) {
+            return BigDecimal.ZERO;
+        }
+    }
+
+    private int toInt(Object value) {
+        if (value == null) return 0;
+        if (value instanceof Number) return ((Number) value).intValue();
+        try {
+            return Integer.parseInt(value.toString());
+        } catch (Exception e) {
+            return 0;
+        }
     }
 }

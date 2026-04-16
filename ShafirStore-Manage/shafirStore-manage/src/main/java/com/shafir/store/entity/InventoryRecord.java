@@ -13,6 +13,8 @@ public class InventoryRecord implements Serializable {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    private Long storeId;
+
     private Long productId;
 
     private Integer type;

@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import { useShopStore } from '@/store/shop'
 
 const service = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
@@ -12,6 +13,16 @@ service.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
+
+    try {
+      const shopStore = useShopStore()
+      if (shopStore.currentStoreId) {
+        config.headers['X-Store-Id'] = shopStore.currentStoreId
+      }
+    } catch (e) {
+      // Pinia store may not be initialized yet during app startup
+    }
+
     return config
   },
   (error) => {
@@ -27,12 +38,18 @@ service.interceptors.response.use(
       if (res.code === 401) {
         localStorage.removeItem('token')
         localStorage.removeItem('userInfo')
+        window.location.href = '/login'
       }
       return Promise.reject(response)
     }
     return res
   },
   (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('userInfo')
+      window.location.href = '/login'
+    }
     console.error('响应错误:', error)
     return Promise.reject(error)
   }

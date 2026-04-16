@@ -77,6 +77,12 @@
         </view>
         <text class="entry-title">门店地址</text>
       </view>
+      <view class="entry-item" bindtap="goToStoreSelect">
+        <view class="entry-icon">
+          <view class="icon-store"></view>
+        </view>
+        <text class="entry-title">{{currentStoreName || '选择门店'}}</text>
+      </view>
     </view>
 
     <!-- 底部安全区域 -->

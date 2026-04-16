@@ -1,0 +1,37 @@
+<view class="store-select-page">
+  <view class="loading-wrapper" wx:if="{{loading}}">
+    <view class="loading-text">加载中...</view>
+  </view>
+
+  <view class="store-list" wx:else>
+    <view class="store-tip">请选择您要前往的门店</view>
+
+    <view
+      class="store-item {{item.id === currentStoreId ? 'store-item-active' : ''}}"
+      wx:for="{{stores}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      data-name="{{item.storeName}}"
+      bindtap="selectStore"
+    >
+      <view class="store-info">
+        <view class="store-name">
+          {{item.storeName}}
+          <text class="store-badge" wx:if="{{item.id === currentStoreId}}">当前</text>
+        </view>
+        <view class="store-address" wx:if="{{item.address}}">{{item.address}}</view>
+        <view class="store-meta">
+          <text wx:if="{{item.phone}}">{{item.phone}}</text>
+          <text wx:if="{{item.businessHours}}">{{item.businessHours}}</text>
+        </view>
+      </view>
+      <view class="store-check" wx:if="{{item.id === currentStoreId}}">
+        <text class="check-icon">✓</text>
+      </view>
+    </view>
+
+    <view class="empty-tip" wx:if="{{!loading && stores.length === 0}}">
+      暂无营业中的店铺
+    </view>
+  </view>
+</view>

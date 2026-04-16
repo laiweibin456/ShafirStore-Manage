@@ -13,6 +13,8 @@ public class MemberPointsRecord implements Serializable {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    private Long storeId;
+
     private Long memberId;
 
     private Integer type;

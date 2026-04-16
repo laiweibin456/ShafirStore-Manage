@@ -6,6 +6,7 @@ import com.shafir.store.entity.Order;
 import com.shafir.store.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.shafir.store.security.SecurityUser;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -100,9 +101,10 @@ public class OrderController {
 
     private Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated()) {
-            String username = authentication.getName();
-            return 1L;
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof SecurityUser) {
+            SecurityUser securityUser = (SecurityUser) authentication.getPrincipal();
+            return securityUser.getUserId();
         }
         return null;
     }

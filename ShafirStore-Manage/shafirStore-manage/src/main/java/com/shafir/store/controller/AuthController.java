@@ -3,18 +3,25 @@ package com.shafir.store.controller;
 import com.shafir.store.common.dto.LoginRequest;
 import com.shafir.store.common.dto.LoginResponse;
 import com.shafir.store.common.dto.RegisterRequest;
-import com.shafir.store.common.exception.BusinessException;
 import com.shafir.store.common.result.Result;
 import com.shafir.store.common.result.ResultCode;
 import com.shafir.store.common.utils.JwtUtil;
+import com.shafir.store.entity.Store;
 import com.shafir.store.entity.User;
+import com.shafir.store.repository.SysUserStoreRelRepository;
+import com.shafir.store.security.SecurityUser;
+import com.shafir.store.service.StoreService;
 import com.shafir.store.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -24,6 +31,9 @@ public class AuthController {
 
     private final UserService userService;
     private final JwtUtil jwtUtil;
+    private final StoreService storeService;
+    private final SysUserStoreRelRepository sysUserStoreRelRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/login")
     public Result<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
@@ -35,7 +45,7 @@ public class AuthController {
             return Result.error(ResultCode.USERNAME_PASSWORD_ERROR);
         }
 
-        if (!request.getPassword().equals(user.getPassword())) {
+        if (!matchesPassword(request.getPassword(), user.getPassword())) {
             log.warn("密码错误: {}", request.getUsername());
             return Result.error(ResultCode.USERNAME_PASSWORD_ERROR);
         }
@@ -47,7 +57,23 @@ public class AuthController {
 
         User userWithRole = userService.getUserWithRole(user.getId());
 
-        String token = jwtUtil.generateToken(user.getId(), user.getUsername(), userWithRole.getRoleKey());
+        List<Long> storeIds = sysUserStoreRelRepository.findStoreIdsByUserId(user.getId());
+        Long currentStoreId = storeIds.isEmpty() ? null : storeIds.get(0);
+
+        boolean isSuperAdmin = "ROLE_SUPER_ADMIN".equals(userWithRole.getRoleKey());
+        if (isSuperAdmin) {
+            List<Store> allStores = storeService.getAllStores();
+            storeIds = allStores.stream().map(Store::getId).collect(Collectors.toList());
+            currentStoreId = storeIds.isEmpty() ? null : storeIds.get(0);
+        }
+
+        String token = jwtUtil.generateToken(
+                user.getId(),
+                user.getUsername(),
+                userWithRole.getRoleKey(),
+                currentStoreId,
+                storeIds
+        );
 
         LoginResponse response = new LoginResponse();
         response.setToken(token);
@@ -59,9 +85,12 @@ public class AuthController {
         userInfo.setPhone(user.getPhone());
         userInfo.setRoleName(userWithRole.getRoleName());
         userInfo.setRoleKey(userWithRole.getRoleKey());
+        userInfo.setStoreId(currentStoreId);
+        userInfo.setStoreIds(storeIds);
+        userInfo.setSuperAdmin(isSuperAdmin);
         response.setUserInfo(userInfo);
 
-        log.info("用户登录成功: {}", request.getUsername());
+        log.info("用户登录成功: {}, 当前店铺: {}", request.getUsername(), currentStoreId);
         return Result.success(response);
     }
 
@@ -86,7 +115,7 @@ public class AuthController {
 
         User user = new User();
         user.setUsername(request.getUsername());
-        user.setPassword(request.getPassword());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setEmail(request.getEmail());
         user.setRoleId(2L);
         user.setStatus(1);
@@ -102,23 +131,17 @@ public class AuthController {
 
     @PostMapping("/logout")
     public Result<Void> logout() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null) {
-            log.info("用户退出登录: {}", authentication.getName());
-        }
-        SecurityContextHolder.clearContext();
+        log.info("用户退出登录");
         return Result.success();
     }
 
     @GetMapping("/current")
-    public Result<LoginResponse.UserInfo> getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
+    public Result<LoginResponse.UserInfo> getCurrentUser(@AuthenticationPrincipal SecurityUser securityUser) {
+        if (securityUser == null) {
             return Result.error(ResultCode.UNAUTHORIZED);
         }
 
-        String username = authentication.getName();
-        User user = userService.getByUsername(username);
+        User user = userService.getByUsername(securityUser.getUsername());
         if (user == null) {
             return Result.error(ResultCode.UNAUTHORIZED);
         }
@@ -132,7 +155,66 @@ public class AuthController {
         userInfo.setPhone(user.getPhone());
         userInfo.setRoleName(userWithRole.getRoleName());
         userInfo.setRoleKey(userWithRole.getRoleKey());
+        userInfo.setStoreId(securityUser.getStoreId());
+        userInfo.setStoreIds(securityUser.getStoreIds());
+        userInfo.setSuperAdmin(securityUser.isSuperAdmin());
 
         return Result.success(userInfo);
+    }
+
+    @PostMapping("/switch-store")
+    public Result<LoginResponse> switchStore(
+            @RequestBody Map<String, Long> params,
+            @AuthenticationPrincipal SecurityUser securityUser) {
+
+        Long targetStoreId = params.get("storeId");
+        if (targetStoreId == null) {
+            return Result.error(ResultCode.VALIDATE_FAILED);
+        }
+
+        if (!securityUser.isSuperAdmin() && !securityUser.getStoreIds().contains(targetStoreId)) {
+            return Result.error(ResultCode.FORBIDDEN);
+        }
+
+        String newToken = jwtUtil.generateToken(
+                securityUser.getUserId(),
+                securityUser.getUsername(),
+                securityUser.getRole(),
+                targetStoreId,
+                securityUser.getStoreIds()
+        );
+
+        LoginResponse response = new LoginResponse();
+        response.setToken(newToken);
+
+        LoginResponse.UserInfo userInfo = new LoginResponse.UserInfo();
+        userInfo.setId(securityUser.getUserId());
+        userInfo.setUsername(securityUser.getUsername());
+        userInfo.setRoleKey(securityUser.getRole());
+        userInfo.setStoreId(targetStoreId);
+        userInfo.setStoreIds(securityUser.getStoreIds());
+        userInfo.setSuperAdmin(securityUser.isSuperAdmin());
+
+        User user = userService.getByUsername(securityUser.getUsername());
+        if (user != null) {
+            userInfo.setRealName(user.getRealName());
+            userInfo.setPhone(user.getPhone());
+            User userWithRole = userService.getUserWithRole(user.getId());
+            if (userWithRole != null) {
+                userInfo.setRoleName(userWithRole.getRoleName());
+            }
+        }
+
+        response.setUserInfo(userInfo);
+
+        log.info("用户切换店铺: userId={}, storeId={}", securityUser.getUserId(), targetStoreId);
+        return Result.success(response);
+    }
+
+    private boolean matchesPassword(String rawPassword, String storedPassword) {
+        if (storedPassword.startsWith("$2a$") || storedPassword.startsWith("$2b$") || storedPassword.startsWith("$2y$")) {
+            return passwordEncoder.matches(rawPassword, storedPassword);
+        }
+        return rawPassword.equals(storedPassword);
     }
 }

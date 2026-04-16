@@ -15,6 +15,8 @@ public class ReservationOrder implements Serializable {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    private Long storeId;
+
     private String orderNo;
 
     private Long userId;

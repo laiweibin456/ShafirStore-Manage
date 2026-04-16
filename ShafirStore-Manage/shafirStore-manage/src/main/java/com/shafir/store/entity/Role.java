@@ -12,6 +12,8 @@ public class Role implements Serializable {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    private Long storeId;
+
     private String roleName;
 
     private String roleKey;

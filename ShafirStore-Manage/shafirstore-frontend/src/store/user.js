@@ -13,7 +13,11 @@ export const useUserStore = defineStore('user', {
     realName: (state) => state.userInfo?.realName || '',
     roleName: (state) => state.userInfo?.roleName || '',
     roleKey: (state) => state.userInfo?.roleKey || '',
-    isAdmin: (state) => state.userInfo?.roleKey === 'ROLE_ADMIN'
+    isAdmin: (state) => state.userInfo?.roleKey === 'ROLE_ADMIN' ||
+                        state.userInfo?.roleKey === 'ROLE_SUPER_ADMIN',
+    isSuperAdmin: (state) => state.userInfo?.roleKey === 'ROLE_SUPER_ADMIN',
+    storeId: (state) => state.userInfo?.storeId || null,
+    storeIds: (state) => state.userInfo?.storeIds || []
   },
 
   actions: {
@@ -55,6 +59,11 @@ export const useUserStore = defineStore('user', {
         console.error('获取用户信息失败:', error)
         throw error
       }
+    },
+
+    updateUserInfo(userInfo) {
+      this.userInfo = userInfo
+      localStorage.setItem('userInfo', JSON.stringify(userInfo))
     }
   }
 })

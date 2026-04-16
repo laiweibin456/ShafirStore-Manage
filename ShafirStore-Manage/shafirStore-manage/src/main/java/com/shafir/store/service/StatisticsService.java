@@ -21,4 +21,6 @@ public interface StatisticsService {
     Map<String, Object> getMemberConsumeRanking(Integer limit);
 
     Map<String, Object> getOverview();
+
+    Map<String, Object> getCrossStoreOverview();
 }

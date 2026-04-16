@@ -1,3 +1,5 @@
+var app = getApp()
+
 Page({
   data: {
     userInfo: {
@@ -10,19 +12,31 @@ Page({
       points: 0,
       coupons: 1
     },
-    hasUserInfo: false
+    hasUserInfo: false,
+    currentStoreName: ''
   },
 
-  onLoad(options) {
+  onLoad: function(options) {
     this.checkUserInfo()
     this.loadMemberInfo()
+    this.updateStoreInfo()
   },
 
-  onShow() {
+  onShow: function() {
     this.checkUserInfo()
+    this.updateStoreInfo()
   },
 
-  checkUserInfo() {
+  updateStoreInfo: function() {
+    var store = app.globalData.currentStore
+    if (store) {
+      this.setData({ currentStoreName: store.storeName })
+    } else {
+      this.setData({ currentStoreName: '' })
+    }
+  },
+
+  checkUserInfo: function() {
     var userInfo = wx.getStorageSync('userInfo')
     var token = wx.getStorageSync('token')
     if (userInfo && token) {
@@ -37,7 +51,7 @@ Page({
     }
   },
 
-  loadMemberInfo() {
+  loadMemberInfo: function() {
     var token = wx.getStorageSync('token')
     if (!token) return
 
@@ -67,25 +81,25 @@ Page({
       })
   },
 
-  goToMember() {
+  goToMember: function() {
     wx.navigateTo({
       url: '/pages/member/index/index'
     })
   },
 
-  goToPickup() {
+  goToPickup: function() {
     wx.switchTab({
       url: '/pages/product/list/list'
     })
   },
 
-  goToTakeaway() {
+  goToTakeaway: function() {
     wx.switchTab({
       url: '/pages/product/list/list'
     })
   },
 
-  goToPoints() {
+  goToPoints: function() {
     var token = wx.getStorageSync('token')
     if (!token) {
       wx.navigateTo({ url: '/pages/member/login/login' })
@@ -96,22 +110,40 @@ Page({
     })
   },
 
-  goToAddress() {
-    wx.openLocation({
-      latitude: 30.5728,
-      longitude: 104.0668,
-      name: '莎菲尔菓子',
-      address: '四川省成都市武侯区xxx路xxx号',
-      scale: 15
+  goToAddress: function() {
+    var store = app.globalData.currentStore
+    if (store && store.latitude && store.longitude) {
+      wx.openLocation({
+        latitude: store.latitude,
+        longitude: store.longitude,
+        name: store.storeName || '莎菲尔菓子',
+        address: store.address || '',
+        scale: 15
+      })
+    } else {
+      wx.openLocation({
+        latitude: 30.5728,
+        longitude: 104.0668,
+        name: '莎菲尔菓子',
+        address: '四川省成都市武侯区xxx路xxx号',
+        scale: 15
+      })
+    }
+  },
+
+  goToStoreSelect: function() {
+    wx.navigateTo({
+      url: '/pages/store/select/select'
     })
   },
 
-  onPullDownRefresh() {
+  onPullDownRefresh: function() {
     this.loadMemberInfo()
+    this.updateStoreInfo()
     wx.stopPullDownRefresh()
   },
 
-  onShareAppMessage() {
+  onShareAppMessage: function() {
     return {
       title: '莎菲尔菓子 - 精致烘焙·甜蜜生活',
       path: '/pages/index/index',

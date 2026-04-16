@@ -5,6 +5,21 @@
         <h2>莎菲尔菓子门店管理系统</h2>
       </div>
       <div class="header-right">
+        <el-select
+          v-if="shopStore.storeList.length > 0"
+          v-model="shopStore.currentStoreId"
+          placeholder="选择店铺"
+          class="store-selector"
+          @change="handleStoreChange"
+        >
+          <el-option
+            v-for="store in shopStore.storeList"
+            :key="store.id"
+            :label="store.storeName"
+            :value="store.id"
+          />
+        </el-select>
+
         <span class="username">{{ userStore.realName || userStore.username }}</span>
         <el-dropdown @command="handleCommand">
           <span class="user-dropdown">
@@ -107,6 +122,16 @@
             <el-icon><Setting /></el-icon>
             <span>用户管理</span>
           </el-menu-item>
+
+          <el-menu-item v-if="userStore.isSuperAdmin" index="/admin/stores">
+            <el-icon><OfficeBuilding /></el-icon>
+            <span>店铺管理</span>
+          </el-menu-item>
+
+          <el-menu-item v-if="userStore.isSuperAdmin" index="/admin/dashboard">
+            <el-icon><Monitor /></el-icon>
+            <span>总控仪表盘</span>
+          </el-menu-item>
         </el-menu>
       </el-aside>
 
@@ -118,17 +143,51 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/store/user'
+import { useShopStore } from '@/store/shop'
 import { ElMessage } from 'element-plus'
-import { HomeFilled, Goods, Box, Sell, User, DataAnalysis, Setting, Avatar, List, Top, Bottom, Document, Warning, ShoppingCart, TrendCharts } from '@element-plus/icons-vue'
+import {
+  HomeFilled, Goods, Box, Sell, User, DataAnalysis, Setting, Avatar,
+  List, Top, Bottom, Document, Warning, ShoppingCart, TrendCharts,
+  OfficeBuilding, Monitor
+} from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+const shopStore = useShopStore()
 
 const activeMenu = computed(() => route.path)
+
+onMounted(async () => {
+  if (userStore.isLoggedIn) {
+    try {
+      await shopStore.fetchStoreList()
+      if (userStore.storeId && !shopStore.currentStoreId) {
+        shopStore.setCurrentStore(userStore.storeId, '')
+      }
+    } catch (error) {
+      console.error('获取店铺列表失败:', error)
+    }
+  }
+})
+
+const handleStoreChange = async (storeId) => {
+  try {
+    const res = await shopStore.switchCurrentStore(storeId)
+    if (res.data && res.data.userInfo) {
+      userStore.updateUserInfo(res.data.userInfo)
+    }
+    if (res.data && res.data.token) {
+      localStorage.setItem('token', res.data.token)
+    }
+    ElMessage.success('已切换到：' + shopStore.currentStoreName)
+  } catch (error) {
+    ElMessage.error('切换店铺失败')
+  }
+}
 
 const handleCommand = async (command) => {
   if (command === 'logout') {
@@ -165,6 +224,10 @@ const handleCommand = async (command) => {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.store-selector {
+  width: 200px;
 }
 
 .username {

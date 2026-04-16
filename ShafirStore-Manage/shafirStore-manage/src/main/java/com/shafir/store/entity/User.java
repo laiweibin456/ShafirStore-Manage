@@ -13,6 +13,8 @@ public class User implements Serializable {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    private Long storeId;
+
     private String username;
 
     private String password;
