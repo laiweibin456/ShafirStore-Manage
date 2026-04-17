@@ -14,14 +14,37 @@ Page({
     dateRange: [],
     timeIndex: [0, 0],
     timeRange: [[], []],
-    submitting: false
+    submitting: false,
+    currentStoreName: '',
+    hasStore: false
   },
 
   onLoad() {
-    this.initDateRange()
-    this.initTimeRange()
-    this.loadCartData()
-    this.loadUserDiscount()
+    this.checkStore()
+    if (this.data.hasStore) {
+      this.initDateRange()
+      this.initTimeRange()
+      this.loadCartData()
+      this.loadUserDiscount()
+    }
+  },
+
+  checkStore() {
+    var app = getApp()
+    var store = app.globalData.currentStore
+    var hasStore = !!store
+    var storeName = store ? store.storeName : ''
+    this.setData({
+      hasStore: hasStore,
+      currentStoreName: storeName
+    })
+    if (!hasStore) {
+      wx.showToast({ title: '请先选择门店', icon: 'none' })
+    }
+  },
+
+  goToStoreSelect() {
+    wx.navigateTo({ url: '/pages/store/select/select' })
   },
 
   initDateRange() {
@@ -144,6 +167,11 @@ Page({
   },
 
   submitOrder() {
+    if (!this.data.hasStore) {
+      wx.showToast({ title: '请先选择门店', icon: 'none' })
+      return
+    }
+
     if (!this.data.hasPickupTime) {
       wx.showToast({ title: '请选择取货时间', icon: 'none' })
       return

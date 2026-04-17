@@ -4,6 +4,47 @@
   padding-bottom: 120rpx;
 }
 
+.store-info-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 30rpx;
+  background-color: #FFF7E6;
+  border-bottom: 1rpx solid #FFE7BA;
+}
+
+.store-info-text {
+  font-size: 28rpx;
+  color: #E6A23C;
+  font-weight: 500;
+}
+
+.store-info-switch {
+  font-size: 24rpx;
+  color: #E6A23C;
+}
+
+.no-store-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40rpx 30rpx;
+  background-color: #FFF1F0;
+  border-bottom: 1rpx solid #FFCCC7;
+}
+
+.no-store-text {
+  font-size: 28rpx;
+  color: #FF4D4F;
+  margin-right: 16rpx;
+}
+
+.no-store-btn {
+  font-size: 26rpx;
+  color: #E6A23C;
+  font-weight: 500;
+}
+
 .section {
   background-color: #ffffff;
   margin-top: 20rpx;

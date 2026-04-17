@@ -28,19 +28,27 @@
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "首页"
+        "text": "首页",
+        "iconPath": "images/tabbar/home.png",
+        "selectedIconPath": "images/tabbar/home-active.png"
       },
       {
         "pagePath": "pages/product/list/list",
-        "text": "预定"
+        "text": "预定",
+        "iconPath": "images/tabbar/reserve.png",
+        "selectedIconPath": "images/tabbar/reserve-active.png"
       },
       {
         "pagePath": "pages/order/list/list",
-        "text": "订单"
+        "text": "订单",
+        "iconPath": "images/tabbar/order.png",
+        "selectedIconPath": "images/tabbar/order-active.png"
       },
       {
         "pagePath": "pages/member/index/index",
-        "text": "我的"
+        "text": "我的",
+        "iconPath": "images/tabbar/me.png",
+        "selectedIconPath": "images/tabbar/me-active.png"
       }
     ]
   },

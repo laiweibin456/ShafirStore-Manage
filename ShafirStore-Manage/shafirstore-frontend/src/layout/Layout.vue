@@ -93,6 +93,10 @@
               <el-icon><Document /></el-icon>
               <span>订单管理</span>
             </el-menu-item>
+            <el-menu-item v-if="canManageUsers" index="/sale/reservation">
+              <el-icon><Calendar /></el-icon>
+              <span>预定订单</span>
+            </el-menu-item>
           </el-sub-menu>
 
           <el-menu-item v-if="isSuperAdmin" index="/member">
@@ -152,7 +156,7 @@ import { ElMessage } from 'element-plus'
 import {
   HomeFilled, Goods, Box, Sell, User, DataAnalysis, Setting, Avatar,
   List, Top, Bottom, Document, Warning, ShoppingCart, TrendCharts,
-  OfficeBuilding, Monitor
+  OfficeBuilding, Monitor, Calendar
 } from '@element-plus/icons-vue'
 
 const router = useRouter()

@@ -1,5 +1,14 @@
 <view class="create-order-page">
-  <view class="section">
+  <view class="store-info-bar" wx:if="{{hasStore}}" bindtap="goToStoreSelect">
+    <text class="store-info-text">📍 {{currentStoreName}}</text>
+    <text class="store-info-switch">切换 ></text>
+  </view>
+  <view class="no-store-bar" wx:if="{{!hasStore}}" bindtap="goToStoreSelect">
+    <text class="no-store-text">请先选择门店</text>
+    <text class="no-store-btn">选择门店 ></text>
+  </view>
+
+  <view class="section" wx:if="{{hasStore}}">
     <view class="section-title">预定商品</view>
     <view class="order-item" wx:for="{{orderItems}}" wx:key="id">
       <image class="item-image" src="{{item.imageUrl || '/images/placeholder.jpg'}}" mode="aspectFill" />

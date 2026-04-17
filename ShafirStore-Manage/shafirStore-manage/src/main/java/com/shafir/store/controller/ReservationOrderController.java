@@ -1,11 +1,13 @@
 package com.shafir.store.controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.shafir.store.common.result.Result;
 import com.shafir.store.entity.ReservationOrder;
 import com.shafir.store.security.SecurityUser;
 import com.shafir.store.service.ReservationOrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -100,5 +102,53 @@ public class ReservationOrderController {
 
         boolean success = reservationOrderService.cancelOrder(id);
         return Result.success(success);
+    }
+
+    @GetMapping("/admin/list")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'STORE_ADMIN')")
+    public Result<IPage<ReservationOrder>> adminList(
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) Integer status,
+            @RequestParam(required = false) String orderNo,
+            @RequestParam(required = false) String phone) {
+
+        log.info("管理端查询预约订单列表: pageNum={}, pageSize={}, status={}, orderNo={}, phone={}",
+                pageNum, pageSize, status, orderNo, phone);
+
+        IPage<ReservationOrder> page = reservationOrderService.listByStoreId(pageNum, pageSize, status, orderNo, phone);
+        return Result.success(page);
+    }
+
+    @PutMapping("/admin/{id}/confirm-payment")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'STORE_ADMIN')")
+    public Result<Map<String, Object>> confirmPayment(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "1") Integer payType) {
+
+        log.info("确认预约订单支付: id={}, payType={}", id, payType);
+
+        Map<String, Object> result = reservationOrderService.confirmPayment(id, payType);
+        return Result.success(result);
+    }
+
+    @PutMapping("/admin/{id}/cancel")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'STORE_ADMIN')")
+    public Result<Boolean> adminCancel(@PathVariable Long id) {
+
+        log.info("管理端取消预约订单: id={}", id);
+
+        boolean success = reservationOrderService.cancelOrder(id);
+        return Result.success(success);
+    }
+
+    @GetMapping("/admin/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'STORE_ADMIN')")
+    public Result<ReservationOrder> adminGetById(@PathVariable Long id) {
+
+        log.info("管理端查询预约订单详情: id={}", id);
+
+        ReservationOrder order = reservationOrderService.getDetail(id);
+        return Result.success(order);
     }
 }

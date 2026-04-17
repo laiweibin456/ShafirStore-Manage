@@ -51,3 +51,33 @@ export function getTodaySalesAmount() {
     method: 'get'
   })
 }
+
+export function getReservationList(params) {
+  return request({
+    url: '/reservation-order/admin/list',
+    method: 'get',
+    params
+  })
+}
+
+export function getReservationDetail(id) {
+  return request({
+    url: `/reservation-order/admin/${id}`,
+    method: 'get'
+  })
+}
+
+export function confirmReservationPayment(id, payType) {
+  return request({
+    url: `/reservation-order/admin/${id}/confirm-payment`,
+    method: 'put',
+    params: { payType }
+  })
+}
+
+export function cancelReservation(id) {
+  return request({
+    url: `/reservation-order/admin/${id}/cancel`,
+    method: 'put'
+  })
+}

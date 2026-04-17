@@ -1,9 +1,13 @@
 package com.shafir.store.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.shafir.store.common.context.StoreContext;
 import com.shafir.store.common.exception.BusinessException;
 import com.shafir.store.entity.*;
 import com.shafir.store.repository.*;
+import com.shafir.store.service.InventoryService;
 import com.shafir.store.service.MiniUserService;
 import com.shafir.store.service.ProductService;
 import com.shafir.store.service.ReservationOrderService;
@@ -27,6 +31,7 @@ public class ReservationOrderServiceImpl implements ReservationOrderService {
     private final RegularUserRepository regularUserRepository;
     private final MemberRepository memberRepository;
     private final MemberLevelRepository memberLevelRepository;
+    private final InventoryService inventoryService;
 
     @Override
     @Transactional
@@ -34,6 +39,11 @@ public class ReservationOrderServiceImpl implements ReservationOrderService {
                                           String pickupTime, String remark, Long userId, Integer userType) {
         if (productIds == null || productIds.isEmpty()) {
             throw new BusinessException("商品不能为空");
+        }
+
+        Long storeId = StoreContext.getCurrentStoreId();
+        if (storeId == null) {
+            throw new BusinessException("请先选择店铺");
         }
 
         BigDecimal totalAmount = BigDecimal.ZERO;
@@ -50,10 +60,18 @@ public class ReservationOrderServiceImpl implements ReservationOrderService {
                 throw new BusinessException("商品不存在: " + productId);
             }
 
+            Inventory inventory = inventoryService.getByProductId(productId);
+            if (inventory == null || inventory.getQuantity() < quantity) {
+                throw new BusinessException("商品「" + product.getName() + "」库存不足，当前库存：" + (inventory != null ? inventory.getQuantity() : 0));
+            }
+
+            inventoryService.stockOut(productId, quantity, userId, null, "预约订单预占库存");
+
             BigDecimal subtotal = product.getPrice().multiply(BigDecimal.valueOf(quantity));
             totalAmount = totalAmount.add(subtotal);
 
             ReservationOrderItem item = new ReservationOrderItem();
+            item.setStoreId(storeId);
             item.setProductId(productId);
             item.setProductName(product.getName());
             item.setPrice(product.getPrice());
@@ -82,6 +100,7 @@ public class ReservationOrderServiceImpl implements ReservationOrderService {
         String orderNo = generateOrderNo();
 
         ReservationOrder order = new ReservationOrder();
+        order.setStoreId(storeId);
         order.setOrderNo(orderNo);
         order.setUserId(userId);
         order.setUserType(userType);
@@ -242,6 +261,11 @@ public class ReservationOrderServiceImpl implements ReservationOrderService {
             throw new BusinessException("订单状态不允许取消");
         }
 
+        List<ReservationOrderItem> items = getOrderItems(orderId);
+        for (ReservationOrderItem item : items) {
+            inventoryService.stockIn(item.getProductId(), item.getQuantity(), order.getUserId(), "取消预约订单，恢复库存");
+        }
+
         order.setStatus(3);
         order.setUpdateTime(LocalDateTime.now());
         return reservationOrderRepository.updateById(order) > 0;
@@ -251,6 +275,113 @@ public class ReservationOrderServiceImpl implements ReservationOrderService {
         LambdaQueryWrapper<ReservationOrderItem> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ReservationOrderItem::getOrderId, orderId);
         return reservationOrderItemRepository.selectList(wrapper);
+    }
+
+    @Override
+    public IPage<ReservationOrder> listByStoreId(Integer pageNum, Integer pageSize, Integer status, String orderNo, String phone) {
+        Page<ReservationOrder> page = new Page<>(pageNum, pageSize);
+        LambdaQueryWrapper<ReservationOrder> wrapper = new LambdaQueryWrapper<>();
+
+        if (status != null) {
+            wrapper.eq(ReservationOrder::getStatus, status);
+        }
+        if (orderNo != null && !orderNo.isEmpty()) {
+            wrapper.like(ReservationOrder::getOrderNo, orderNo);
+        }
+        wrapper.orderByDesc(ReservationOrder::getCreateTime);
+
+        IPage<ReservationOrder> resultPage = reservationOrderRepository.selectPage(page, wrapper);
+
+        List<ReservationOrder> orders = resultPage.getRecords();
+        for (ReservationOrder order : orders) {
+            enrichOrderInfo(order);
+            if (phone != null && !phone.isEmpty()) {
+                if (order.getUserPhone() == null || !order.getUserPhone().contains(phone)) {
+                    orders.remove(order);
+                }
+            }
+            List<ReservationOrderItem> items = getOrderItems(order.getId());
+            order.setItems(items);
+        }
+
+        return resultPage;
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Object> confirmPayment(Long orderId, Integer payType) {
+        ReservationOrder order = reservationOrderRepository.selectById(orderId);
+        if (order == null) {
+            throw new BusinessException("订单不存在");
+        }
+
+        if (order.getStatus() != 1) {
+            throw new BusinessException("订单状态不允许确认支付");
+        }
+
+        order.setStatus(2);
+        order.setUpdateTime(LocalDateTime.now());
+        reservationOrderRepository.updateById(order);
+
+        boolean upgraded = false;
+        Integer newLevel = null;
+        String newLevelName = null;
+
+        if (order.getUserType() == 1) {
+            RegularUser user = regularUserRepository.selectById(order.getUserId());
+            if (user != null) {
+                BigDecimal newTotalConsume = user.getTotalConsume().add(order.getPayAmount());
+
+                LambdaQueryWrapper<MemberLevel> levelWrapper = new LambdaQueryWrapper<>();
+                levelWrapper.le(MemberLevel::getMinAmount, newTotalConsume);
+                levelWrapper.orderByDesc(MemberLevel::getLevel);
+                levelWrapper.last("LIMIT 1");
+                MemberLevel nextLevel = memberLevelRepository.selectOne(levelWrapper);
+
+                if (nextLevel != null && nextLevel.getLevel() > 1) {
+                    Member member = miniUserService.upgradeToMember(user);
+                    upgraded = true;
+                    newLevel = member.getLevel();
+                    newLevelName = getLevelName(member.getLevel());
+                } else {
+                    user.setTotalConsume(newTotalConsume);
+                    regularUserRepository.updateById(user);
+                }
+            }
+        } else {
+            Member member = memberRepository.selectById(order.getUserId());
+            if (member != null) {
+                BigDecimal newTotalConsume = member.getTotalConsume().add(order.getPayAmount());
+                int newPoints = member.getPoints() + order.getPayAmount().intValue();
+
+                LambdaQueryWrapper<MemberLevel> levelWrapper = new LambdaQueryWrapper<>();
+                levelWrapper.gt(MemberLevel::getLevel, member.getLevel());
+                levelWrapper.le(MemberLevel::getMinAmount, newTotalConsume);
+                levelWrapper.orderByAsc(MemberLevel::getLevel);
+                levelWrapper.last("LIMIT 1");
+                MemberLevel nextLevel = memberLevelRepository.selectOne(levelWrapper);
+
+                if (nextLevel != null) {
+                    member.setLevel(nextLevel.getLevel());
+                    upgraded = true;
+                    newLevel = nextLevel.getLevel();
+                    newLevelName = nextLevel.getName();
+                }
+
+                member.setTotalConsume(newTotalConsume);
+                member.setPoints(newPoints);
+                member.setUpdateTime(LocalDateTime.now());
+                memberRepository.updateById(member);
+            }
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("upgraded", upgraded);
+        result.put("newLevel", newLevel);
+        result.put("newLevelName", newLevelName);
+        result.put("order", getDetail(orderId));
+
+        return result;
     }
 
     private void enrichOrderInfo(ReservationOrder order) {

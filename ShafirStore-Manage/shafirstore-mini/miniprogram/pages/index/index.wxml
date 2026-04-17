@@ -54,29 +54,17 @@
         <text class="btn-title">到店自提</text>
         <text class="btn-desc">当天到店取餐</text>
       </view>
-      <view class="action-btn" bindtap="goToTakeaway">
+      <view class="action-btn" bindtap="goToPoints">
         <view class="btn-icon-circle">
-          <view class="icon-delivery"></view>
+          <view class="icon-star"></view>
         </view>
-        <text class="btn-title">自营外卖</text>
-        <text class="btn-desc">满50元起送</text>
+        <text class="btn-title">积分兑换</text>
+        <text class="btn-desc">积分换好礼</text>
       </view>
     </view>
 
     <!-- 功能入口区域 -->
     <view class="function-entries">
-      <view class="entry-item" bindtap="goToPoints">
-        <view class="entry-icon">
-          <view class="icon-star"></view>
-        </view>
-        <text class="entry-title">积分兑换</text>
-      </view>
-      <view class="entry-item" bindtap="goToAddress">
-        <view class="entry-icon">
-          <view class="icon-pin"></view>
-        </view>
-        <text class="entry-title">门店地址</text>
-      </view>
       <view class="entry-item" bindtap="goToStoreSelect">
         <view class="entry-icon">
           <view class="icon-store"></view>

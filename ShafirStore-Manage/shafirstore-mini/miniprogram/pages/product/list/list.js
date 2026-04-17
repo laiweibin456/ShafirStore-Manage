@@ -4,18 +4,52 @@ Page({
     currentCategoryIndex: 0,
     products: [],
     loading: false,
-    cartCount: 0
+    cartCount: 0,
+    currentStoreName: '',
+    hasStore: false,
+    lastStoreId: null
   },
 
   onLoad() {
+    this.checkStore()
     this.loadCategories()
   },
 
   onShow() {
     this.loadCartCount()
+    var prevStoreId = this.data.lastStoreId
+    this.checkStore()
+    if (this.data.hasStore) {
+      var currentStoreId = getApp().globalData.currentStoreId
+      if (currentStoreId !== prevStoreId || this.data.categories.length === 0) {
+        this.setData({ lastStoreId: currentStoreId, categories: [], products: [] })
+        this.loadCategories()
+      }
+    }
+  },
+
+  checkStore() {
+    var app = getApp()
+    var store = app.globalData.currentStore
+    var hasStore = !!store
+    var storeName = store ? store.storeName : ''
+    this.setData({
+      hasStore: hasStore,
+      currentStoreName: storeName
+    })
+    if (!hasStore) {
+      this.setData({ products: [], categories: [] })
+    }
+  },
+
+  goToStoreSelect() {
+    wx.navigateTo({ url: '/pages/store/select/select' })
   },
 
   loadCategories() {
+    var app = getApp()
+    if (!app.globalData.currentStoreId) return
+
     var that = this
     wx.$request.getProductCategories()
       .then(function(res) {
@@ -73,6 +107,11 @@ Page({
   addToCart(e) {
     var product = e.currentTarget.dataset.item
     if (!product) return
+
+    if (product.stockQuantity !== undefined && product.stockQuantity <= 0) {
+      wx.showToast({ title: '该商品暂无库存', icon: 'none' })
+      return
+    }
 
     var cartItems = wx.getStorageSync('cartItems') || []
     var existIndex = -1

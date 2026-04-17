@@ -1,5 +1,6 @@
 package com.shafir.store.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.shafir.store.entity.ReservationOrder;
 import com.shafir.store.entity.ReservationOrderItem;
 
@@ -18,4 +19,8 @@ public interface ReservationOrderService {
     Map<String, Object> completeOrder(Long orderId);
 
     boolean cancelOrder(Long orderId);
+
+    IPage<ReservationOrder> listByStoreId(Integer pageNum, Integer pageSize, Integer status, String orderNo, String phone);
+
+    Map<String, Object> confirmPayment(Long orderId, Integer payType);
 }

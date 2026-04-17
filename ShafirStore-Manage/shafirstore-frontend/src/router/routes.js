@@ -72,6 +72,12 @@ export default [
         meta: { title: '订单管理', requiresAuth: true }
       },
       {
+        path: 'sale/reservation',
+        name: 'ReservationList',
+        component: () => import('@/views/sale/ReservationList.vue'),
+        meta: { title: '预定订单', requiresAuth: true, requiredRoles: ['ROLE_SUPER_ADMIN', 'ROLE_STORE_ADMIN'] }
+      },
+      {
         path: 'system/user',
         name: 'UserManage',
         component: () => import('@/views/system/UserManage.vue'),

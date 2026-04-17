@@ -30,6 +30,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
+        String requestUri = request.getRequestURI();
         try {
             String token = extractToken(request);
 
@@ -40,6 +41,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Long storeId = jwtUtil.getStoreIdFromToken(token);
                 List<Long> storeIds = jwtUtil.getStoreIdsFromToken(token);
 
+                log.info("[JWT] uri={}, userId={}, role={}, storeId={}, storeIds={}", 
+                        requestUri, userId, role, storeId, storeIds);
+
                 SecurityUser securityUser = new SecurityUser(userId, username, role, storeId, storeIds,
                         Collections.singletonList(new SimpleGrantedAuthority(role)));
 
@@ -49,9 +53,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
                 Long targetStoreId = resolveStoreId(securityUser, request);
+                log.info("[JWT] uri={}, targetStoreId={}, X-Store-Id header={}", 
+                        requestUri, targetStoreId, request.getHeader("X-Store-Id"));
                 if (targetStoreId != null) {
                     StoreContext.setCurrentStoreId(targetStoreId);
                 }
+            } else {
+                log.info("[JWT] uri={}, 无有效token", requestUri);
             }
         } catch (Exception e) {
             log.error("JWT 认证失败: {}", e.getMessage());
@@ -87,14 +95,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return null;
         }
 
-        if (headerStoreId != null && securityUser.getStoreIds() != null
-                && securityUser.getStoreIds().contains(headerStoreId)) {
-            log.debug("店铺管理员使用前端传递的店铺ID: {}", headerStoreId);
-            return headerStoreId;
+        if (headerStoreId != null) {
+            if (securityUser.getStoreIds() != null && !securityUser.getStoreIds().isEmpty()
+                    && securityUser.getStoreIds().contains(headerStoreId)) {
+                log.debug("店铺管理员使用前端传递的店铺ID: {}", headerStoreId);
+                return headerStoreId;
+            }
+            if (securityUser.getStoreId() == null) {
+                log.debug("小程序用户使用前端传递的店铺ID: {}", headerStoreId);
+                return headerStoreId;
+            }
         }
 
         Long userStoreId = securityUser.getStoreId();
-        log.debug("店铺管理员使用用户关联的店铺ID: {}, 用户店铺列表: {}", userStoreId, securityUser.getStoreIds());
+        log.debug("使用用户关联的店铺ID: {}, 用户店铺列表: {}", userStoreId, securityUser.getStoreIds());
         return userStoreId;
     }
 }

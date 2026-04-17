@@ -93,12 +93,6 @@ Page({
     })
   },
 
-  goToTakeaway: function() {
-    wx.switchTab({
-      url: '/pages/product/list/list'
-    })
-  },
-
   goToPoints: function() {
     var token = wx.getStorageSync('token')
     if (!token) {
@@ -108,27 +102,6 @@ Page({
     wx.navigateTo({
       url: '/pages/member/points/points'
     })
-  },
-
-  goToAddress: function() {
-    var store = app.globalData.currentStore
-    if (store && store.latitude && store.longitude) {
-      wx.openLocation({
-        latitude: store.latitude,
-        longitude: store.longitude,
-        name: store.storeName || '莎菲尔菓子',
-        address: store.address || '',
-        scale: 15
-      })
-    } else {
-      wx.openLocation({
-        latitude: 30.5728,
-        longitude: 104.0668,
-        name: '莎菲尔菓子',
-        address: '四川省成都市武侯区xxx路xxx号',
-        scale: 15
-      })
-    }
   },
 
   goToStoreSelect: function() {

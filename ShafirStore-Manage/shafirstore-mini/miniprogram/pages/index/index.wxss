@@ -235,56 +235,6 @@
   border-bottom: 8rpx solid transparent;
 }
 
-.btn-title {
-  display: block;
-  font-size: 30rpx;
-  color: #333333;
-  font-weight: 600;
-  margin-bottom: 6rpx;
-  letter-spacing: 1rpx;
-}
-
-.btn-desc {
-  display: block;
-  font-size: 22rpx;
-  color: #999999;
-}
-
-/* ==================== 功能入口区域 ==================== */
-.function-entries {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20rpx;
-  margin-bottom: 20rpx;
-}
-
-.entry-item {
-  display: flex;
-  align-items: center;
-  background-color: #FFFFFF;
-  border-radius: 16rpx;
-  padding: 28rpx 24rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
-  transition: all 0.15s ease;
-}
-
-.entry-item:active {
-  transform: scale(0.98);
-  opacity: 0.9;
-}
-
-.entry-icon {
-  width: 64rpx;
-  height: 64rpx;
-  border-radius: 50%;
-  border: 2rpx solid #D0D0D0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 20rpx;
-  flex-shrink: 0;
-}
-
 /* CSS纯线条图标 - 星形(积分) */
 .icon-star {
   width: 20rpx;
@@ -318,26 +268,83 @@
   border-top: 14rpx solid #333333;
 }
 
-/* CSS纯线条图标 - 定位针(门店) */
-.icon-pin {
-  width: 16rpx;
-  height: 16rpx;
-  border: 3rpx solid #333333;
+.btn-title {
+  display: block;
+  font-size: 30rpx;
+  color: #333333;
+  font-weight: 600;
+  margin-bottom: 6rpx;
+  letter-spacing: 1rpx;
+}
+
+.btn-desc {
+  display: block;
+  font-size: 22rpx;
+  color: #999999;
+}
+
+/* ==================== 功能入口区域 ==================== */
+.function-entries {
+  margin-bottom: 20rpx;
+}
+
+.entry-item {
+  display: flex;
+  align-items: center;
+  background-color: #FFFFFF;
+  border-radius: 16rpx;
+  padding: 28rpx 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+  transition: all 0.15s ease;
+}
+
+.entry-item:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.entry-icon {
+  width: 64rpx;
+  height: 64rpx;
   border-radius: 50%;
+  border: 2rpx solid #D0D0D0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+/* CSS纯线条图标 - 店铺 */
+.icon-store {
+  width: 24rpx;
+  height: 20rpx;
+  border: 3rpx solid #333333;
+  border-radius: 2rpx 2rpx 0 0;
   position: relative;
 }
 
-.icon-pin::after {
+.icon-store::before {
   content: '';
   position: absolute;
-  bottom: -12rpx;
+  top: -10rpx;
+  left: -4rpx;
+  right: -4rpx;
+  height: 10rpx;
+  background-color: #333333;
+  clip-path: polygon(0 100%, 50% 0, 100% 100%);
+}
+
+.icon-store::after {
+  content: '';
+  position: absolute;
+  bottom: -6rpx;
   left: 50%;
   transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 8rpx solid transparent;
-  border-right: 8rpx solid transparent;
-  border-top: 10rpx solid #333333;
+  width: 8rpx;
+  height: 6rpx;
+  border: 2rpx solid #333333;
+  border-top: none;
 }
 
 .entry-title {
