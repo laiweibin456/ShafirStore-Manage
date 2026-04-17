@@ -24,12 +24,6 @@ export default [
         meta: { title: '个人中心', requiresAuth: true }
       },
       {
-        path: 'system/user',
-        name: 'UserManage',
-        component: () => import('@/views/system/UserManage.vue'),
-        meta: { title: '用户管理', requiresAuth: true }
-      },
-      {
         path: 'product',
         name: 'ProductManage',
         component: () => import('@/views/product/ProductManage.vue'),
@@ -78,28 +72,34 @@ export default [
         meta: { title: '订单管理', requiresAuth: true }
       },
       {
+        path: 'system/user',
+        name: 'UserManage',
+        component: () => import('@/views/system/UserManage.vue'),
+        meta: { title: '用户管理', requiresAuth: true, requiredRoles: ['ROLE_SUPER_ADMIN', 'ROLE_STORE_ADMIN'] }
+      },
+      {
         path: 'member',
         name: 'MemberManage',
         component: () => import('@/views/member/MemberManage.vue'),
-        meta: { title: '会员管理', requiresAuth: true }
+        meta: { title: '会员管理', requiresAuth: true, requiredRole: 'ROLE_SUPER_ADMIN' }
       },
       {
         path: 'statistics/sales',
         name: 'SalesStatistics',
         component: () => import('@/views/statistics/SalesStatistics.vue'),
-        meta: { title: '销售统计', requiresAuth: true }
+        meta: { title: '销售统计', requiresAuth: true, requiredRoles: ['ROLE_SUPER_ADMIN', 'ROLE_STORE_ADMIN'] }
       },
       {
         path: 'statistics/inventory',
         name: 'InventoryStatistics',
         component: () => import('@/views/statistics/InventoryStatistics.vue'),
-        meta: { title: '库存统计', requiresAuth: true }
+        meta: { title: '库存统计', requiresAuth: true, requiredRoles: ['ROLE_SUPER_ADMIN', 'ROLE_STORE_ADMIN'] }
       },
       {
         path: 'statistics/member',
         name: 'MemberStatistics',
         component: () => import('@/views/statistics/MemberStatistics.vue'),
-        meta: { title: '会员统计', requiresAuth: true }
+        meta: { title: '会员统计', requiresAuth: true, requiredRole: 'ROLE_SUPER_ADMIN' }
       },
       {
         path: 'admin/stores',

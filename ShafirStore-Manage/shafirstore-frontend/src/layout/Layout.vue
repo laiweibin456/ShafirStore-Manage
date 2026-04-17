@@ -20,6 +20,7 @@
           />
         </el-select>
 
+        <span class="role-tag">{{ roleLabel }}</span>
         <span class="username">{{ userStore.realName || userStore.username }}</span>
         <el-dropdown @command="handleCommand">
           <span class="user-dropdown">
@@ -94,41 +95,41 @@
             </el-menu-item>
           </el-sub-menu>
 
-          <el-menu-item v-if="userStore.isAdmin" index="/member">
+          <el-menu-item v-if="isSuperAdmin" index="/member">
             <el-icon><User /></el-icon>
             <span>会员管理</span>
           </el-menu-item>
 
-          <el-sub-menu v-if="userStore.isAdmin" index="/statistics">
+          <el-sub-menu v-if="canViewStatistics" index="/statistics">
             <template #title>
               <el-icon><DataAnalysis /></el-icon>
               <span>统计分析</span>
             </template>
-            <el-menu-item index="/statistics/sales">
+            <el-menu-item v-if="canViewSalesStats" index="/statistics/sales">
               <el-icon><TrendCharts /></el-icon>
               <span>销售统计</span>
             </el-menu-item>
-            <el-menu-item index="/statistics/inventory">
+            <el-menu-item v-if="canViewSalesStats" index="/statistics/inventory">
               <el-icon><Box /></el-icon>
               <span>库存统计</span>
             </el-menu-item>
-            <el-menu-item index="/statistics/member">
+            <el-menu-item v-if="isSuperAdmin" index="/statistics/member">
               <el-icon><User /></el-icon>
               <span>会员统计</span>
             </el-menu-item>
           </el-sub-menu>
 
-          <el-menu-item v-if="userStore.isAdmin" index="/system/user">
+          <el-menu-item v-if="canManageUsers" index="/system/user">
             <el-icon><Setting /></el-icon>
             <span>用户管理</span>
           </el-menu-item>
 
-          <el-menu-item v-if="userStore.isSuperAdmin" index="/admin/stores">
+          <el-menu-item v-if="isSuperAdmin" index="/admin/stores">
             <el-icon><OfficeBuilding /></el-icon>
             <span>店铺管理</span>
           </el-menu-item>
 
-          <el-menu-item v-if="userStore.isSuperAdmin" index="/admin/dashboard">
+          <el-menu-item v-if="isSuperAdmin" index="/admin/dashboard">
             <el-icon><Monitor /></el-icon>
             <span>总控仪表盘</span>
           </el-menu-item>
@@ -160,6 +161,21 @@ const userStore = useUserStore()
 const shopStore = useShopStore()
 
 const activeMenu = computed(() => route.path)
+
+const isSuperAdmin = computed(() => userStore.roleKey === 'ROLE_SUPER_ADMIN')
+const isStoreAdmin = computed(() => userStore.roleKey === 'ROLE_STORE_ADMIN')
+const isClerk = computed(() => userStore.roleKey === 'ROLE_CLERK')
+
+const canViewStatistics = computed(() => isSuperAdmin.value || isStoreAdmin.value)
+const canViewSalesStats = computed(() => isSuperAdmin.value || isStoreAdmin.value)
+const canManageUsers = computed(() => isSuperAdmin.value || isStoreAdmin.value)
+
+const roleLabel = computed(() => {
+  if (isSuperAdmin.value) return '系统管理员'
+  if (isStoreAdmin.value) return '店铺管理员'
+  if (isClerk.value) return '店员'
+  return ''
+})
 
 onMounted(async () => {
   if (userStore.isLoggedIn) {
@@ -228,6 +244,15 @@ const handleCommand = async (command) => {
 
 .store-selector {
   width: 200px;
+}
+
+.role-tag {
+  font-size: 12px;
+  color: #E6A23C;
+  background: #fdf6ec;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid #faecd8;
 }
 
 .username {

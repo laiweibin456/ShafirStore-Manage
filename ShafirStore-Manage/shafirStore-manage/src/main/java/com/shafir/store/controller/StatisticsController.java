@@ -23,6 +23,7 @@ public class StatisticsController {
     private final StatisticsService statisticsService;
 
     @GetMapping("/sales/daily")
+    @PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_STORE_ADMIN')")
     public Result<Map<String, Object>> getDailySales(
             @RequestParam(required = false, defaultValue = "7") Integer days) {
         log.info("获取日销售统计: days={}", days);
@@ -31,6 +32,7 @@ public class StatisticsController {
     }
 
     @GetMapping("/sales/monthly")
+    @PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_STORE_ADMIN')")
     public Result<Map<String, Object>> getMonthlySales(
             @RequestParam(required = false, defaultValue = "12") Integer months) {
         log.info("获取月销售统计: months={}", months);
@@ -39,6 +41,7 @@ public class StatisticsController {
     }
 
     @GetMapping("/sales/products")
+    @PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_STORE_ADMIN')")
     public Result<Map<String, Object>> getProductSalesRanking(
             @RequestParam(required = false, defaultValue = "10") Integer limit) {
         log.info("获取商品销售排行: limit={}", limit);
@@ -47,6 +50,7 @@ public class StatisticsController {
     }
 
     @GetMapping("/inventory/summary")
+    @PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_STORE_ADMIN')")
     public Result<Map<String, Object>> getInventorySummary() {
         log.info("获取库存汇总统计");
         Map<String, Object> data = statisticsService.getInventorySummary();
@@ -54,6 +58,7 @@ public class StatisticsController {
     }
 
     @GetMapping("/inventory/low-stock")
+    @PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_STORE_ADMIN')")
     public Result<Map<String, Object>> getLowStockProducts(
             @RequestParam(required = false, defaultValue = "10") Integer limit) {
         log.info("获取低库存商品: limit={}", limit);
@@ -62,6 +67,7 @@ public class StatisticsController {
     }
 
     @GetMapping("/member/summary")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
     public Result<Map<String, Object>> getMemberSummary() {
         log.info("获取会员汇总统计");
         Map<String, Object> data = statisticsService.getMemberSummary();
@@ -69,6 +75,7 @@ public class StatisticsController {
     }
 
     @GetMapping("/member/new")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
     public Result<Map<String, Object>> getNewMembers(
             @RequestParam(required = false, defaultValue = "30") Integer days) {
         log.info("获取新增会员统计: days={}", days);
@@ -77,6 +84,7 @@ public class StatisticsController {
     }
 
     @GetMapping("/member/consume")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
     public Result<Map<String, Object>> getMemberConsumeRanking(
             @RequestParam(required = false, defaultValue = "10") Integer limit) {
         log.info("获取会员消费排行: limit={}", limit);
@@ -85,6 +93,7 @@ public class StatisticsController {
     }
 
     @GetMapping("/overview")
+    @PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_STORE_ADMIN')")
     public Result<Map<String, Object>> getOverview() {
         log.info("获取经营概览");
         Map<String, Object> data = statisticsService.getOverview();

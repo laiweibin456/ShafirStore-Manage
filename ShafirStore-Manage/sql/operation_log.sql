@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS `operation_log` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `user_id` BIGINT DEFAULT NULL COMMENT '操作用户ID',
+    `username` VARCHAR(50) DEFAULT NULL COMMENT '操作用户名',
+    `role_key` VARCHAR(50) DEFAULT NULL COMMENT '操作角色',
+    `store_id` BIGINT DEFAULT NULL COMMENT '关联店铺ID',
+    `operation` VARCHAR(200) DEFAULT NULL COMMENT '操作描述',
+    `method` VARCHAR(200) DEFAULT NULL COMMENT '请求方法',
+    `request_url` VARCHAR(500) DEFAULT NULL COMMENT '请求URL',
+    `request_method` VARCHAR(10) DEFAULT NULL COMMENT 'HTTP方法',
+    `request_params` TEXT DEFAULT NULL COMMENT '请求参数',
+    `ip` VARCHAR(50) DEFAULT NULL COMMENT 'IP地址',
+    `duration` BIGINT DEFAULT NULL COMMENT '执行时长(ms)',
+    `status` TINYINT DEFAULT 1 COMMENT '操作状态 1-成功 0-失败',
+    `error_msg` VARCHAR(500) DEFAULT NULL COMMENT '错误信息',
+    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_user_id` (`user_id`),
+    KEY `idx_store_id` (`store_id`),
+    KEY `idx_create_time` (`create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='操作日志表';

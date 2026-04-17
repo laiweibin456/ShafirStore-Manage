@@ -60,6 +60,11 @@ router.beforeEach(async (to, from, next) => {
       return
     }
 
+    if (to.meta.requiredRoles && !to.meta.requiredRoles.includes(userStore.roleKey)) {
+      next('/home')
+      return
+    }
+
     if (userStore.isLoggedIn && shopStore.storeList.length === 0) {
       try {
         await shopStore.fetchStoreList()

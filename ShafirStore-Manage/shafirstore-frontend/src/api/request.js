@@ -36,19 +36,30 @@ service.interceptors.response.use(
     const res = response.data
     if (res.code !== 200) {
       if (res.code === 401) {
-        localStorage.removeItem('token')
-        localStorage.removeItem('userInfo')
-        window.location.href = '/login'
+        const isLoginPage = window.location.pathname === '/login'
+        const isLoginRequest = response.config.url.includes('/auth/login')
+        if (!isLoginPage && !isLoginRequest) {
+          localStorage.removeItem('token')
+          localStorage.removeItem('userInfo')
+          window.location.href = '/login'
+        }
       }
-      return Promise.reject(response)
+      const error = new Error(res.message || '请求失败')
+      error.response = response
+      error.code = res.code
+      return Promise.reject(error)
     }
     return res
   },
   (error) => {
     if (error.response && error.response.status === 401) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('userInfo')
-      window.location.href = '/login'
+      const isLoginPage = window.location.pathname === '/login'
+      const isLoginRequest = error.config?.url?.includes('/auth/login')
+      if (!isLoginPage && !isLoginRequest) {
+        localStorage.removeItem('token')
+        localStorage.removeItem('userInfo')
+        window.location.href = '/login'
+      }
     }
     console.error('响应错误:', error)
     return Promise.reject(error)

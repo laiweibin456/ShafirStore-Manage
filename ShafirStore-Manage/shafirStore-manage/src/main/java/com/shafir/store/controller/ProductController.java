@@ -7,6 +7,7 @@ import com.shafir.store.entity.Product;
 import com.shafir.store.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -41,6 +42,7 @@ public class ProductController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
     public Result<Boolean> add(@RequestBody Product product) {
         log.info("新增商品: {}", product.getName());
         boolean result = productService.addProduct(product);
@@ -48,6 +50,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
     public Result<Boolean> update(@PathVariable Long id, @RequestBody Product product) {
         log.info("更新商品: id={}", id);
         product.setId(id);
@@ -56,6 +59,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
     public Result<Boolean> delete(@PathVariable Long id) {
         log.info("删除商品: id={}", id);
         boolean result = productService.deleteProduct(id);
@@ -63,6 +67,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}/status")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
     public Result<Boolean> updateStatus(@PathVariable Long id, @RequestParam Integer status) {
         log.info("更新商品状态: id={}, status={}", id, status);
         boolean result = productService.updateStatus(id, status);

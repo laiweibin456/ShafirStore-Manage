@@ -155,6 +155,8 @@ const showErrorDialog = (error) => {
       errorMessage = '网络连接失败，请检查网络设置'
     } else if (error.message.includes('timeout')) {
       errorMessage = '请求超时，请稍后重试'
+    } else {
+      errorMessage = error.message
     }
   }
 

@@ -26,7 +26,8 @@ public class MybatisPlusConfig {
             "regular_user",
             "member_store_rel",
             "sys_user_store_rel",
-            "store_daily_summary"
+            "store_daily_summary",
+            "operation_log"
     );
 
     @Bean

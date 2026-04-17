@@ -7,6 +7,7 @@ import com.shafir.store.entity.InventoryRecord;
 import com.shafir.store.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/inventory")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 public class InventoryController {
 
     private final InventoryService inventoryService;
