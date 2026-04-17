@@ -2,7 +2,7 @@
   <div class="statistics-container">
     <el-card>
       <template #header>
-        <span>库存统计概览</span>
+        <span>库存统计概览<el-tag v-if="shopStore.currentStoreName" size="small" type="info" style="margin-left: 8px;">{{ shopStore.currentStoreName }}</el-tag></span>
       </template>
 
       <el-row :gutter="20" class="summary-row">
@@ -92,6 +92,9 @@ import { ref, onMounted, nextTick } from 'vue'
 import { ArrowRight } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
 import { getInventorySummary, getLowStockProducts } from '@/api/statistics'
+import { useShopStore } from '@/store/shop'
+
+const shopStore = useShopStore()
 
 const summaryData = ref({
   totalProducts: 0,

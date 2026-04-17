@@ -77,8 +77,15 @@ public class StoreController {
 
     @GetMapping("/my")
     public Result<List<Store>> getMyStores(@AuthenticationPrincipal SecurityUser securityUser) {
-        log.info("查询当前用户关联店铺: userId={}", securityUser.getUserId());
-        List<Store> stores = storeService.getStoresByUserId(securityUser.getUserId());
+        log.info("查询当前用户关联店铺: userId={}, role={}", securityUser.getUserId(), securityUser.getRole());
+        
+        List<Store> stores;
+        if (securityUser.isSuperAdmin()) {
+            stores = storeService.getAllStores();
+        } else {
+            stores = storeService.getStoresByUserId(securityUser.getUserId());
+        }
+        
         return Result.success(stores);
     }
 

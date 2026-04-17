@@ -3,7 +3,7 @@
     <el-card>
       <template #header>
         <div class="card-header">
-          <span>销售统计</span>
+          <span>销售统计<el-tag v-if="shopStore.currentStoreName" size="small" type="info" style="margin-left: 8px;">{{ shopStore.currentStoreName }}</el-tag></span>
           <el-radio-group v-model="timeRange" size="default">
             <el-radio-button value="7">近7天</el-radio-button>
             <el-radio-button value="30">近30天</el-radio-button>
@@ -94,6 +94,9 @@
 import { ref, onMounted, watch, nextTick } from 'vue'
 import * as echarts from 'echarts'
 import { getDailySales, getMonthlySales, getProductSalesRanking, getOverview } from '@/api/statistics'
+import { useShopStore } from '@/store/shop'
+
+const shopStore = useShopStore()
 
 const timeRange = ref('7')
 const rankingDays = ref(30)

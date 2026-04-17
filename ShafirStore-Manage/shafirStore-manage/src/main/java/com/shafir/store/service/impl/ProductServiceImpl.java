@@ -3,6 +3,7 @@ package com.shafir.store.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.shafir.store.common.context.StoreContext;
 import com.shafir.store.entity.Product;
 import com.shafir.store.entity.ProductCategory;
 import com.shafir.store.repository.ProductCategoryRepository;
@@ -71,6 +72,9 @@ public class ProductServiceImpl implements ProductService {
         }
         if (product.getUnit() == null || product.getUnit().isEmpty()) {
             product.setUnit("个");
+        }
+        if (product.getStoreId() == null) {
+            product.setStoreId(StoreContext.getCurrentStoreId());
         }
         return productRepository.insert(product) > 0;
     }

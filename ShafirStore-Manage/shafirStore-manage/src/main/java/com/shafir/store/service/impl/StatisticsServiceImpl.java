@@ -49,12 +49,18 @@ public class StatisticsServiceImpl implements StatisticsService {
         LocalDate today = LocalDate.now();
         LocalDate startDate = today.minusDays(days - 1);
 
+        String storeCondition = "";
+        Long currentStoreId = StoreContext.getCurrentStoreId();
+        if (currentStoreId != null) {
+            storeCondition = " AND store_id = " + currentStoreId;
+        }
+
         String sql = "SELECT DATE(create_time) AS sale_date, " +
                 "COUNT(*) AS order_count, " +
                 "COALESCE(SUM(pay_amount), 0) AS total_amount " +
                 "FROM sale_order " +
                 "WHERE create_time BETWEEN ? AND ? " +
-                "AND status = 1 AND order_type = 1 " +
+                "AND status = 1 AND order_type = 1" + storeCondition + " " +
                 "GROUP BY DATE(create_time) " +
                 "ORDER BY sale_date";
 

@@ -58,6 +58,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         Order order = new Order();
+        order.setStoreId(StoreContext.getCurrentStoreId());
         order.setOrderNo(generateOrderNo());
         order.setMemberId(memberId);
         order.setPayType(payType);
@@ -92,6 +93,7 @@ public class OrderServiceImpl implements OrderService {
             BigDecimal subtotal = product.getPrice().multiply(BigDecimal.valueOf(quantity));
 
             OrderItem item = new OrderItem();
+            item.setStoreId(StoreContext.getCurrentStoreId());
             item.setProductId(productId);
             item.setProductName(product.getName());
             item.setPrice(product.getPrice());

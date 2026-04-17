@@ -3,6 +3,7 @@ package com.shafir.store.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.shafir.store.common.context.StoreContext;
 import com.shafir.store.common.exception.BusinessException;
 import com.shafir.store.entity.Inventory;
 import com.shafir.store.entity.InventoryRecord;
@@ -236,6 +237,7 @@ public class InventoryServiceImpl implements InventoryService {
 
         if (inventory == null) {
             inventory = new Inventory();
+            inventory.setStoreId(StoreContext.getCurrentStoreId());
             inventory.setProductId(productId);
             inventory.setQuantity(0);
             inventory.setAlertThreshold(10);
@@ -248,6 +250,7 @@ public class InventoryServiceImpl implements InventoryService {
     private void saveRecord(Long productId, Integer type, Integer quantity, int beforeQuantity, int afterQuantity,
                            Long orderId, Long operatorId, String remark) {
         InventoryRecord record = new InventoryRecord();
+        record.setStoreId(StoreContext.getCurrentStoreId());
         record.setProductId(productId);
         record.setType(type);
         record.setQuantity(quantity);

@@ -1,5 +1,6 @@
 package com.shafir.store.security;
 
+import com.shafir.store.common.context.StoreContext;
 import com.shafir.store.common.utils.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -46,6 +47,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         new UsernamePasswordAuthenticationToken(securityUser, null, securityUser.getAuthorities());
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                Long targetStoreId = resolveStoreId(securityUser, request);
+                if (targetStoreId != null) {
+                    StoreContext.setCurrentStoreId(targetStoreId);
+                }
             }
         } catch (Exception e) {
             log.error("JWT 认证失败: {}", e.getMessage());
@@ -60,5 +66,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return bearerToken.substring(7);
         }
         return null;
+    }
+
+    private Long resolveStoreId(SecurityUser securityUser, HttpServletRequest request) {
+        Long headerStoreId = null;
+        String storeIdHeader = request.getHeader("X-Store-Id");
+        if (storeIdHeader != null && !storeIdHeader.isEmpty()) {
+            try {
+                headerStoreId = Long.parseLong(storeIdHeader);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+        if (securityUser.isSuperAdmin()) {
+            if (headerStoreId != null) {
+                return headerStoreId;
+            }
+            return null;
+        }
+
+        if (headerStoreId != null && securityUser.getStoreIds() != null
+                && securityUser.getStoreIds().contains(headerStoreId)) {
+            return headerStoreId;
+        }
+
+        return securityUser.getStoreId();
     }
 }

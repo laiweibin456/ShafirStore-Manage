@@ -8,7 +8,6 @@ import com.baomidou.mybatisplus.extension.plugins.handler.TenantLineHandler;
 import com.shafir.store.common.context.StoreContext;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
-import net.sf.jsqlparser.expression.NullValue;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -38,11 +37,11 @@ public class MybatisPlusConfig {
         tenantInterceptor.setTenantLineHandler(new TenantLineHandler() {
             @Override
             public Expression getTenantId() {
-                if (StoreContext.isIgnoreTenant()) {
-                    return new NullValue();
-                }
                 Long storeId = StoreContext.getCurrentStoreId();
-                return new LongValue(storeId != null ? storeId : 0L);
+                if (storeId == null) {
+                    return new LongValue(-1);
+                }
+                return new LongValue(storeId);
             }
 
             @Override
@@ -52,7 +51,13 @@ public class MybatisPlusConfig {
 
             @Override
             public boolean ignoreTable(String tableName) {
-                return IGNORE_TABLES.contains(tableName) || StoreContext.isIgnoreTenant();
+                if (StoreContext.isIgnoreTenant()) {
+                    return true;
+                }
+                if (IGNORE_TABLES.contains(tableName)) {
+                    return true;
+                }
+                return false;
             }
         });
 

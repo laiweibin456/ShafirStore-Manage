@@ -8,7 +8,7 @@
         <el-select
           v-if="shopStore.storeList.length > 0"
           v-model="shopStore.currentStoreId"
-          placeholder="选择店铺"
+          :placeholder="userStore.isSuperAdmin && !shopStore.currentStoreId ? '请选择店铺' : '选择店铺'"
           class="store-selector"
           @change="handleStoreChange"
         >
