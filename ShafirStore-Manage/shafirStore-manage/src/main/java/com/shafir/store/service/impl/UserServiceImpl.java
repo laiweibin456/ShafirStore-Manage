@@ -3,9 +3,12 @@ package com.shafir.store.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.shafir.store.common.context.StoreContext;
 import com.shafir.store.entity.Role;
+import com.shafir.store.entity.Store;
 import com.shafir.store.entity.User;
 import com.shafir.store.repository.RoleRepository;
+import com.shafir.store.repository.StoreRepository;
 import com.shafir.store.repository.UserRepository;
 import com.shafir.store.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +25,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final StoreRepository storeRepository;
 
     @Override
     public User getByUsername(String username) {
@@ -43,6 +47,33 @@ public class UserServiceImpl implements UserService {
             if (role != null) {
                 user.setRoleName(role.getRoleName());
                 user.setRoleKey(role.getRoleKey());
+            }
+        }
+        return user;
+    }
+
+    @Override
+    public User getUserWithRoleAndStore(Long id) {
+        User user = userRepository.selectById(id);
+        if (user != null) {
+            if (user.getRoleId() != null) {
+                Role role = roleRepository.selectById(user.getRoleId());
+                if (role != null) {
+                    user.setRoleName(role.getRoleName());
+                    user.setRoleKey(role.getRoleKey());
+                }
+            }
+            if (user.getStoreId() != null) {
+                boolean oldIgnore = StoreContext.isIgnoreTenant();
+                try {
+                    StoreContext.setIgnoreTenant(true);
+                    Store store = storeRepository.selectById(user.getStoreId());
+                    if (store != null) {
+                        user.setStoreName(store.getStoreName());
+                    }
+                } finally {
+                    StoreContext.setIgnoreTenant(oldIgnore);
+                }
             }
         }
         return user;
@@ -72,6 +103,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public IPage<User> selectPage(Integer pageNum, Integer pageSize, String username, String realName, Long roleId, Integer status) {
+        return selectPageWithFilter(pageNum, pageSize, username, realName, roleId, status, null, true);
+    }
+
+    @Override
+    public IPage<User> selectPageWithFilter(Integer pageNum, Integer pageSize, String username, String realName, Long roleId, Integer status, Long storeId, boolean isSuperAdmin) {
         Page<User> page = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
 
@@ -87,27 +123,52 @@ public class UserServiceImpl implements UserService {
         if (status != null) {
             wrapper.eq(User::getStatus, status);
         }
-
-        wrapper.orderByAsc(User::getId);
-        IPage<User> resultPage = userRepository.selectPage(page, wrapper);
-
-        for (User user : resultPage.getRecords()) {
-            if (user.getRoleId() != null) {
-                Role role = roleRepository.selectById(user.getRoleId());
-                if (role != null) {
-                    user.setRoleName(role.getRoleName());
-                    user.setRoleKey(role.getRoleKey());
-                }
-            }
-            user.setPassword(null);
+        if (storeId != null) {
+            wrapper.eq(User::getStoreId, storeId);
         }
 
-        return resultPage;
+        wrapper.orderByAsc(User::getId);
+        
+        boolean oldIgnore = StoreContext.isIgnoreTenant();
+        try {
+            StoreContext.setIgnoreTenant(true);
+            IPage<User> resultPage = userRepository.selectPage(page, wrapper);
+
+            for (User user : resultPage.getRecords()) {
+                if (user.getRoleId() != null) {
+                    Role role = roleRepository.selectById(user.getRoleId());
+                    if (role != null) {
+                        user.setRoleName(role.getRoleName());
+                        user.setRoleKey(role.getRoleKey());
+                    }
+                }
+                if (user.getStoreId() != null) {
+                    Store store = storeRepository.selectById(user.getStoreId());
+                    if (store != null) {
+                        user.setStoreName(store.getStoreName());
+                    }
+                }
+                user.setPassword(null);
+            }
+
+            return resultPage;
+        } finally {
+            StoreContext.setIgnoreTenant(oldIgnore);
+        }
     }
 
     @Override
     public List<User> getAllRoles() {
-        List<Role> roles = roleRepository.selectList(null);
+        return getAllRolesForUser(true);
+    }
+
+    @Override
+    public List<User> getAllRolesForUser(boolean isSuperAdmin) {
+        LambdaQueryWrapper<Role> wrapper = new LambdaQueryWrapper<>();
+        if (!isSuperAdmin) {
+            wrapper.eq(Role::getId, 6L);
+        }
+        List<Role> roles = roleRepository.selectList(wrapper);
         List<User> roleList = new ArrayList<>();
         for (Role role : roles) {
             User roleUser = new User();

@@ -13,6 +13,8 @@ public interface UserService {
 
     User getUserWithRole(Long id);
 
+    User getUserWithRoleAndStore(Long id);
+
     boolean register(User user);
 
     boolean existsByUsername(String username);
@@ -21,7 +23,11 @@ public interface UserService {
 
     IPage<User> selectPage(Integer pageNum, Integer pageSize, String username, String realName, Long roleId, Integer status);
 
+    IPage<User> selectPageWithFilter(Integer pageNum, Integer pageSize, String username, String realName, Long roleId, Integer status, Long storeId, boolean isSuperAdmin);
+
     List<User> getAllRoles();
+
+    List<User> getAllRolesForUser(boolean isSuperAdmin);
 
     boolean addUser(User user);
 

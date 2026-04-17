@@ -10,7 +10,7 @@
             <el-form-item label="姓名">
               <el-input v-model="queryForm.realName" placeholder="请输入姓名" clearable />
             </el-form-item>
-            <el-form-item label="角色">
+            <el-form-item label="角色" v-if="userStore.isSuperAdmin">
               <el-select v-model="queryForm.roleId" placeholder="请选择角色" clearable>
                 <el-option
                   v-for="role in roleList"
@@ -39,11 +39,16 @@
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="username" label="用户名" />
         <el-table-column prop="realName" label="姓名" />
+        <el-table-column prop="storeName" label="所属店铺" width="120">
+          <template #default="{ row }">
+            <el-tag v-if="row.storeName" type="info">{{ row.storeName }}</el-tag>
+            <span v-else style="color: #999;">-</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="phone" label="手机号" width="120" />
-        <el-table-column prop="email" label="邮箱" width="180" />
         <el-table-column prop="roleName" label="角色" width="100">
           <template #default="{ row }">
-            <el-tag :type="row.roleId === 1 ? 'danger' : 'info'">
+            <el-tag :type="getRoleTagType(row.roleId)">
               {{ row.roleName || '未分配' }}
             </el-tag>
           </template>
@@ -87,22 +92,30 @@
       v-model:visible="formVisible"
       :user-id="currentUserId"
       :role-list="roleList"
+      :store-list="storeList"
       @success="handleFormSuccess"
     />
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getUserList, getAllRoles, updateUserStatus, deleteUser, resetPassword } from '@/api/user'
+import { useUserStore } from '@/store/user'
+import { useShopStore } from '@/store/shop'
 import UserForm from './UserForm.vue'
+
+const userStore = useUserStore()
+const shopStore = useShopStore()
 
 const loading = ref(false)
 const tableData = ref([])
 const roleList = ref([])
 const formVisible = ref(false)
 const currentUserId = ref(null)
+
+const storeList = computed(() => shopStore.storeList)
 
 const queryForm = reactive({
   username: '',
@@ -116,6 +129,15 @@ const pagination = reactive({
   size: 10,
   total: 0
 })
+
+const getRoleTagType = (roleId) => {
+  switch (roleId) {
+    case 4: return 'danger'
+    case 5: return 'warning'
+    case 6: return 'info'
+    default: return ''
+  }
+}
 
 const fetchData = async () => {
   loading.value = true
@@ -177,7 +199,7 @@ const handleResetPwd = async (row) => {
     ElMessage.success('密码重置成功')
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error('重置密码失败')
+      ElMessage.error(error.message || '重置密码失败')
     }
   }
 }
@@ -196,7 +218,7 @@ const handleToggleStatus = async (row) => {
     fetchData()
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error(`${action}失败`)
+      ElMessage.error(error.message || `${action}失败`)
     }
   }
 }
@@ -213,7 +235,7 @@ const handleDelete = async (row) => {
     fetchData()
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error('删除失败')
+      ElMessage.error(error.message || '删除失败')
     }
   }
 }

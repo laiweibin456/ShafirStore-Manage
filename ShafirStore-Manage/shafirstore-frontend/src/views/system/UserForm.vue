@@ -19,6 +19,17 @@
         <el-input v-model="form.realName" placeholder="请输入姓名" />
       </el-form-item>
 
+      <el-form-item label="所属店铺" prop="storeId" v-if="userStore.isSuperAdmin">
+        <el-select v-model="form.storeId" placeholder="请选择店铺" style="width: 100%">
+          <el-option
+            v-for="store in storeList"
+            :key="store.id"
+            :label="store.storeName"
+            :value="store.id"
+          />
+        </el-select>
+      </el-form-item>
+
       <el-form-item label="手机号" prop="phone">
         <el-input v-model="form.phone" placeholder="请输入手机号" />
       </el-form-item>
@@ -27,7 +38,7 @@
         <el-input v-model="form.email" placeholder="请输入邮箱" />
       </el-form-item>
 
-      <el-form-item label="角色" prop="roleId">
+      <el-form-item label="角色" prop="roleId" v-if="userStore.isSuperAdmin">
         <el-select v-model="form.roleId" placeholder="请选择角色" style="width: 100%">
           <el-option
             v-for="role in roleList"
@@ -36,6 +47,10 @@
             :value="role.roleId"
           />
         </el-select>
+      </el-form-item>
+
+      <el-form-item label="角色" v-if="!userStore.isSuperAdmin">
+        <el-tag type="info">店员</el-tag>
       </el-form-item>
 
       <el-form-item label="状态" prop="status">
@@ -70,11 +85,18 @@
 import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getUserById, addUser, updateUser } from '@/api/user'
+import { useUserStore } from '@/store/user'
+
+const userStore = useUserStore()
 
 const props = defineProps({
   visible: Boolean,
   userId: Number,
   roleList: {
+    type: Array,
+    default: () => []
+  },
+  storeList: {
     type: Array,
     default: () => []
   }
@@ -90,6 +112,7 @@ const isEdit = computed(() => !!props.userId)
 const form = ref({
   username: '',
   realName: '',
+  storeId: null,
   phone: '',
   email: '',
   roleId: null,
@@ -98,7 +121,7 @@ const form = ref({
   newPassword: ''
 })
 
-const rules = {
+const rules = computed(() => ({
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
     { min: 3, max: 20, message: '用户名长度需在3-20个字符之间', trigger: 'blur' }
@@ -106,13 +129,16 @@ const rules = {
   realName: [
     { required: true, message: '请输入姓名', trigger: 'blur' }
   ],
-  roleId: [
+  roleId: userStore.isSuperAdmin ? [
     { required: true, message: '请选择角色', trigger: 'change' }
-  ],
+  ] : [],
+  storeId: userStore.isSuperAdmin ? [
+    { required: true, message: '请选择店铺', trigger: 'change' }
+  ] : [],
   email: [
     { type: 'email', message: '邮箱格式不正确', trigger: 'blur' }
   ]
-}
+}))
 
 const fetchUserData = async () => {
   if (!props.userId) return
@@ -123,6 +149,7 @@ const fetchUserData = async () => {
     form.value = {
       username: userData.username,
       realName: userData.realName,
+      storeId: userData.storeId,
       phone: userData.phone || '',
       email: userData.email || '',
       roleId: userData.roleId,
@@ -140,6 +167,7 @@ const handleClose = () => {
   form.value = {
     username: '',
     realName: '',
+    storeId: null,
     phone: '',
     email: '',
     roleId: null,
@@ -163,8 +191,15 @@ const handleSubmit = async () => {
         realName: form.value.realName,
         phone: form.value.phone,
         email: form.value.email,
-        roleId: form.value.roleId,
         status: form.value.status
+      }
+
+      if (userStore.isSuperAdmin) {
+        data.roleId = form.value.roleId
+        data.storeId = form.value.storeId
+      } else {
+        data.roleId = 6
+        data.storeId = userStore.storeId
       }
 
       if (isEdit.value) {
@@ -182,7 +217,7 @@ const handleSubmit = async () => {
       emit('success')
       handleClose()
     } catch (error) {
-      const msg = error?.response?.data?.message || (isEdit.value ? '更新失败' : '新增失败')
+      const msg = error?.message || (isEdit.value ? '更新失败' : '新增失败')
       ElMessage.error(msg)
     } finally {
       loading.value = false
@@ -192,6 +227,10 @@ const handleSubmit = async () => {
 
 watch(() => props.visible, (val) => {
   if (val) {
+    if (!userStore.isSuperAdmin && !isEdit.value) {
+      form.value.roleId = 6
+      form.value.storeId = userStore.storeId
+    }
     fetchUserData()
   }
 })

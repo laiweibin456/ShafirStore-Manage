@@ -1,7 +1,6 @@
 package com.shafir.store.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.shafir.store.common.context.StoreContext;
 import com.shafir.store.common.result.Result;
 import com.shafir.store.common.result.ResultCode;
 import com.shafir.store.entity.SysUserStoreRel;
@@ -39,13 +38,16 @@ public class UserController {
             @RequestParam(required = false) Integer status,
             @AuthenticationPrincipal SecurityUser securityUser) {
 
-        if (securityUser.isSuperAdmin()) {
-            log.info("超级管理员查询所有用户");
-        } else {
-            log.info("店铺管理员查询本店店员: storeId={}", securityUser.getStoreId());
+        Long filterStoreId = null;
+        Long filterRoleId = roleId;
+        boolean isSuperAdmin = securityUser.isSuperAdmin();
+        
+        if (!isSuperAdmin) {
+            filterStoreId = securityUser.getStoreId();
+            filterRoleId = 6L;
         }
 
-        IPage<User> page = userService.selectPage(pageNum, pageSize, username, realName, roleId, status);
+        IPage<User> page = userService.selectPageWithFilter(pageNum, pageSize, username, realName, filterRoleId, status, filterStoreId, isSuperAdmin);
         return Result.success(page);
     }
 
@@ -53,14 +55,13 @@ public class UserController {
     @PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_STORE_ADMIN')")
     public Result<User> getById(@PathVariable Long id, @AuthenticationPrincipal SecurityUser securityUser) {
         log.info("查询用户详情: id={}", id);
-        User user = userService.getUserWithRole(id);
+        User user = userService.getUserWithRoleAndStore(id);
         if (user == null) {
             return Result.error(ResultCode.NOT_FOUND);
         }
 
         if (!securityUser.isSuperAdmin()) {
-            List<Long> storeIds = sysUserStoreRelRepository.findStoreIdsByUserId(id);
-            if (!storeIds.contains(securityUser.getStoreId())) {
+            if (user.getStoreId() == null || !user.getStoreId().equals(securityUser.getStoreId())) {
                 return Result.error(ResultCode.FORBIDDEN);
             }
         }
@@ -70,8 +71,8 @@ public class UserController {
     }
 
     @GetMapping("/roles")
-    public Result<List<User>> getAllRoles() {
-        List<User> roles = userService.getAllRoles();
+    public Result<List<User>> getAllRoles(@AuthenticationPrincipal SecurityUser securityUser) {
+        List<User> roles = userService.getAllRolesForUser(securityUser.isSuperAdmin());
         return Result.success(roles);
     }
 
@@ -89,7 +90,7 @@ public class UserController {
         }
 
         if (!securityUser.isSuperAdmin()) {
-            user.setRoleId(3L);
+            user.setRoleId(6L);
             user.setStoreId(securityUser.getStoreId());
         }
 
@@ -99,10 +100,10 @@ public class UserController {
 
         boolean result = userService.addUser(user);
 
-        if (result && !securityUser.isSuperAdmin() && securityUser.getStoreId() != null) {
+        if (result && user.getStoreId() != null) {
             SysUserStoreRel rel = new SysUserStoreRel();
             rel.setUserId(user.getId());
-            rel.setStoreId(securityUser.getStoreId());
+            rel.setStoreId(user.getStoreId());
             sysUserStoreRelRepository.insert(rel);
         }
 
@@ -114,17 +115,21 @@ public class UserController {
     public Result<Boolean> update(@PathVariable Long id, @RequestBody User user,
                                   @AuthenticationPrincipal SecurityUser securityUser) {
         log.info("更新用户: id={}", id);
-        user.setId(id);
+        
+        User existingUser = userService.getById(id);
+        if (existingUser == null) {
+            return Result.error(ResultCode.NOT_FOUND);
+        }
 
         if (!securityUser.isSuperAdmin()) {
-            List<Long> storeIds = sysUserStoreRelRepository.findStoreIdsByUserId(id);
-            if (!storeIds.contains(securityUser.getStoreId())) {
+            if (existingUser.getStoreId() == null || !existingUser.getStoreId().equals(securityUser.getStoreId())) {
                 return Result.error(ResultCode.FORBIDDEN);
             }
             user.setRoleId(null);
             user.setStoreId(null);
         }
 
+        user.setId(id);
         user.setPassword(null);
         boolean result = userService.updateUser(user);
         return Result.success(result);
@@ -136,9 +141,13 @@ public class UserController {
                                         @AuthenticationPrincipal SecurityUser securityUser) {
         log.info("更新用户状态: id={}, status={}", id, status);
 
+        User existingUser = userService.getById(id);
+        if (existingUser == null) {
+            return Result.error(ResultCode.NOT_FOUND);
+        }
+
         if (!securityUser.isSuperAdmin()) {
-            List<Long> storeIds = sysUserStoreRelRepository.findStoreIdsByUserId(id);
-            if (!storeIds.contains(securityUser.getStoreId())) {
+            if (existingUser.getStoreId() == null || !existingUser.getStoreId().equals(securityUser.getStoreId())) {
                 return Result.error(ResultCode.FORBIDDEN);
             }
         }
@@ -148,9 +157,21 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
-    public Result<Boolean> delete(@PathVariable Long id) {
+    @PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_STORE_ADMIN')")
+    public Result<Boolean> delete(@PathVariable Long id, @AuthenticationPrincipal SecurityUser securityUser) {
         log.info("删除用户: id={}", id);
+
+        User existingUser = userService.getById(id);
+        if (existingUser == null) {
+            return Result.error(ResultCode.NOT_FOUND);
+        }
+
+        if (!securityUser.isSuperAdmin()) {
+            if (existingUser.getStoreId() == null || !existingUser.getStoreId().equals(securityUser.getStoreId())) {
+                return Result.error(ResultCode.FORBIDDEN);
+            }
+        }
+
         boolean result = userService.deleteUser(id);
         return Result.success(result);
     }
@@ -161,9 +182,13 @@ public class UserController {
                                          @AuthenticationPrincipal SecurityUser securityUser) {
         log.info("重置用户密码: id={}", id);
 
+        User existingUser = userService.getById(id);
+        if (existingUser == null) {
+            return Result.error(ResultCode.NOT_FOUND);
+        }
+
         if (!securityUser.isSuperAdmin()) {
-            List<Long> storeIds = sysUserStoreRelRepository.findStoreIdsByUserId(id);
-            if (!storeIds.contains(securityUser.getStoreId())) {
+            if (existingUser.getStoreId() == null || !existingUser.getStoreId().equals(securityUser.getStoreId())) {
                 return Result.error(ResultCode.FORBIDDEN);
             }
         }

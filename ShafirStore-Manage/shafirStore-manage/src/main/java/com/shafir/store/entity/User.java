@@ -35,6 +35,9 @@ public class User implements Serializable {
     @TableField(exist = false)
     private String roleKey;
 
+    @TableField(exist = false)
+    private String storeName;
+
     private Integer status;
 
     private LocalDateTime createTime;
