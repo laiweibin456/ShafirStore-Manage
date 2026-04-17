@@ -80,16 +80,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (securityUser.isSuperAdmin()) {
             if (headerStoreId != null) {
+                log.debug("系统管理员使用前端传递的店铺ID: {}", headerStoreId);
                 return headerStoreId;
             }
+            log.debug("系统管理员未选择店铺，storeId为null");
             return null;
         }
 
         if (headerStoreId != null && securityUser.getStoreIds() != null
                 && securityUser.getStoreIds().contains(headerStoreId)) {
+            log.debug("店铺管理员使用前端传递的店铺ID: {}", headerStoreId);
             return headerStoreId;
         }
 
-        return securityUser.getStoreId();
+        Long userStoreId = securityUser.getStoreId();
+        log.debug("店铺管理员使用用户关联的店铺ID: {}, 用户店铺列表: {}", userStoreId, securityUser.getStoreIds());
+        return userStoreId;
     }
 }
