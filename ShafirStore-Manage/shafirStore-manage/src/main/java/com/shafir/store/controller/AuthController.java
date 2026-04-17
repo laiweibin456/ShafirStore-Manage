@@ -64,7 +64,7 @@ public class AuthController {
         if (isSuperAdmin) {
             List<Store> allStores = storeService.getAllStores();
             storeIds = allStores.stream().map(Store::getId).collect(Collectors.toList());
-            currentStoreId = null;
+            currentStoreId = storeIds.isEmpty() ? null : storeIds.get(0);
         }
 
         String token = jwtUtil.generateToken(

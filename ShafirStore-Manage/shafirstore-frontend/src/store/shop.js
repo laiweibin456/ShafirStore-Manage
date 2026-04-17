@@ -21,12 +21,7 @@ export const useShopStore = defineStore('shop', {
         const res = await getMyStores()
         this.storeList = res.data || []
 
-        const userStore = useUserStore()
-
-        if (userStore.isSuperAdmin) {
-          this.currentStoreId = null
-          this.currentStoreName = ''
-        } else if (this.storeList.length > 0) {
+        if (this.storeList.length > 0) {
           if (!this.currentStoreId || !this.storeList.find(s => s.id === this.currentStoreId)) {
             this.currentStoreId = this.storeList[0].id
             this.currentStoreName = this.storeList[0].storeName

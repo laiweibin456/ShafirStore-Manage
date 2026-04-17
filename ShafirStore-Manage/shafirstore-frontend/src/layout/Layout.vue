@@ -200,6 +200,7 @@ const handleStoreChange = async (storeId) => {
       localStorage.setItem('token', res.data.token)
     }
     ElMessage.success('已切换到：' + shopStore.currentStoreName)
+    router.go(0)
   } catch (error) {
     ElMessage.error('切换店铺失败')
   }
