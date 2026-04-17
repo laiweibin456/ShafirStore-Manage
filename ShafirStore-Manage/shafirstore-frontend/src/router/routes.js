@@ -27,7 +27,7 @@ export default [
         path: 'product',
         name: 'ProductManage',
         component: () => import('@/views/product/ProductManage.vue'),
-        meta: { title: '商品管理', requiresAuth: true }
+        meta: { title: '商品管理', requiresAuth: true, requiredRole: 'ROLE_SUPER_ADMIN' }
       },
       {
         path: 'inventory',

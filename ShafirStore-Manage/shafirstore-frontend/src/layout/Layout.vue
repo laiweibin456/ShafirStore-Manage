@@ -48,7 +48,7 @@
             <span>首页</span>
           </el-menu-item>
 
-          <el-menu-item index="/product">
+          <el-menu-item v-if="isSuperAdmin" index="/product">
             <el-icon><Goods /></el-icon>
             <span>商品管理</span>
           </el-menu-item>
