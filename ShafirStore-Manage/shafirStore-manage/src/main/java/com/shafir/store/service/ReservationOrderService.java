@@ -10,7 +10,8 @@ import java.util.Map;
 public interface ReservationOrderService {
 
     Map<String, Object> createOrder(List<Long> productIds, List<Integer> quantities,
-                                     String pickupTime, String remark, Long userId, Integer userType);
+                                     String pickupTime, String remark, Long userId, Integer userType, 
+                                     Integer pointsDeduct, List<Map<String, Object>> itemDetails);
 
     List<ReservationOrder> listByUserId(Long userId, Integer userType, Integer status);
 

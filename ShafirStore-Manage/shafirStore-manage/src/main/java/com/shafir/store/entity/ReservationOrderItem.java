@@ -24,9 +24,15 @@ public class ReservationOrderItem implements Serializable {
 
     private BigDecimal price;
 
+    private BigDecimal originalPrice;
+
     private Integer quantity;
 
     private BigDecimal subtotal;
+
+    private Boolean isPointsExchange;
+
+    private Integer requiredPoints;
 
     private LocalDateTime createTime;
 }

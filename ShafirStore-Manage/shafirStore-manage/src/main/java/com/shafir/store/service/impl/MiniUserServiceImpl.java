@@ -1,14 +1,14 @@
 package com.shafir.store.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.shafir.store.common.context.StoreContext;
 import com.shafir.store.common.exception.BusinessException;
 import com.shafir.store.common.utils.JwtUtil;
-import com.shafir.store.entity.Member;
-import com.shafir.store.entity.MemberLevel;
-import com.shafir.store.entity.RegularUser;
-import com.shafir.store.repository.MemberLevelRepository;
-import com.shafir.store.repository.MemberRepository;
-import com.shafir.store.repository.RegularUserRepository;
+import com.shafir.store.entity.*;
+import com.shafir.store.repository.*;
+import com.shafir.store.service.InventoryService;
 import com.shafir.store.service.MiniUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +18,9 @@ import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -29,6 +31,10 @@ public class MiniUserServiceImpl implements MiniUserService {
     private final RegularUserRepository regularUserRepository;
     private final MemberRepository memberRepository;
     private final MemberLevelRepository memberLevelRepository;
+    private final MemberPointsRecordRepository memberPointsRecordRepository;
+    private final MemberStoreRelRepository memberStoreRelRepository;
+    private final ProductRepository productRepository;
+    private final InventoryService inventoryService;
     private final JwtUtil jwtUtil;
 
     @Override
@@ -235,5 +241,101 @@ public class MiniUserServiceImpl implements MiniUserService {
         }
 
         return userInfo;
+    }
+
+    @Override
+    public IPage<MemberPointsRecord> getPointsRecords(Long memberId, Integer pageNum, Integer pageSize) {
+        Page<MemberPointsRecord> page = new Page<>(pageNum, pageSize);
+        LambdaQueryWrapper<MemberPointsRecord> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(MemberPointsRecord::getMemberId, memberId);
+        wrapper.orderByDesc(MemberPointsRecord::getCreateTime);
+        return memberPointsRecordRepository.selectPage(page, wrapper);
+    }
+
+    @Override
+    public List<Map<String, Object>> getExchangeProducts(Long memberId) {
+        Long storeId = StoreContext.getCurrentStoreId();
+        if (storeId == null) {
+            throw new BusinessException("未指定当前店铺");
+        }
+
+        Member member = memberRepository.selectById(memberId);
+        int currentPoints = member != null ? (member.getPoints() != null ? member.getPoints() : 0) : 0;
+
+        LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Product::getStatus, 1);
+        wrapper.eq(Product::getStoreId, storeId);
+        List<Product> products = productRepository.selectList(wrapper);
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Product product : products) {
+            Inventory inventory = inventoryService.getByProductId(product.getId());
+            int stockQuantity = inventory != null ? inventory.getQuantity() : 0;
+
+            int requiredPoints = product.getPrice().multiply(new BigDecimal("3")).intValue();
+
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", product.getId());
+            item.put("name", product.getName());
+            item.put("price", product.getPrice());
+            item.put("imageUrl", product.getImageUrl());
+            item.put("stockQuantity", stockQuantity);
+            item.put("requiredPoints", requiredPoints);
+            item.put("canExchange", currentPoints >= requiredPoints && stockQuantity > 0);
+
+            result.add(item);
+        }
+
+        return result;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean exchangeProduct(Long memberId, Long productId) {
+        Long storeId = StoreContext.getCurrentStoreId();
+        if (storeId == null) {
+            throw new BusinessException("未指定当前店铺");
+        }
+
+        Product product = productRepository.selectById(productId);
+        if (product == null || product.getStatus() != 1) {
+            throw new BusinessException("商品不存在或已下架");
+        }
+
+        Inventory inventory = inventoryService.getByProductId(productId);
+        if (inventory == null || inventory.getQuantity() < 1) {
+            throw new BusinessException("商品库存不足");
+        }
+
+        Member member = memberRepository.selectById(memberId);
+        if (member == null) {
+            throw new BusinessException("会员不存在");
+        }
+
+        int currentPoints = member.getPoints() != null ? member.getPoints() : 0;
+        int requiredPoints = product.getPrice().multiply(new BigDecimal("3")).intValue();
+
+        if (currentPoints < requiredPoints) {
+            throw new BusinessException("积分不足，需要 " + requiredPoints + " 积分，当前 " + currentPoints + " 积分");
+        }
+
+        int newPoints = currentPoints - requiredPoints;
+        member.setPoints(newPoints);
+        member.setUpdateTime(LocalDateTime.now());
+        memberRepository.updateById(member);
+
+        MemberPointsRecord record = new MemberPointsRecord();
+        record.setMemberId(memberId);
+        record.setStoreId(storeId);
+        record.setType(2);
+        record.setPoints(requiredPoints);
+        record.setBalance(newPoints);
+        record.setRemark("积分兑换商品：" + product.getName());
+        record.setCreateTime(LocalDateTime.now());
+        memberPointsRecordRepository.insert(record);
+
+        inventoryService.stockOut(productId, 1, memberId, null, "积分兑换商品：" + product.getName());
+
+        return true;
     }
 }

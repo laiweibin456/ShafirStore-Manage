@@ -3,6 +3,7 @@ Page({
     cartItems: [],
     isAllSelected: true,
     totalPrice: '0.00',
+    totalPoints: 0,
     selectedCount: 0
   },
 
@@ -20,6 +21,9 @@ Page({
       if (cartItems[i].selected === undefined) {
         cartItems[i].selected = true
       }
+      if (!cartItems[i].cartKey) {
+        cartItems[i].cartKey = cartItems[i].id + '_' + (cartItems[i].isPointsExchange ? 'exchange' : 'normal')
+      }
     }
     this.setData({ cartItems: cartItems })
     this.calculateTotal()
@@ -33,12 +37,16 @@ Page({
   calculateTotal() {
     var cartItems = this.data.cartItems
     var total = 0
+    var points = 0
     var selectedCount = 0
     var allSelected = cartItems.length > 0
 
     for (var i = 0; i < cartItems.length; i++) {
       if (cartItems[i].selected) {
         total += cartItems[i].price * cartItems[i].quantity
+        if (cartItems[i].isPointsExchange && cartItems[i].requiredPoints) {
+          points += cartItems[i].requiredPoints * cartItems[i].quantity
+        }
         selectedCount += cartItems[i].quantity
       } else {
         allSelected = false
@@ -47,16 +55,17 @@ Page({
 
     this.setData({
       totalPrice: total.toFixed(2),
+      totalPoints: points,
       selectedCount: selectedCount,
       isAllSelected: allSelected
     })
   },
 
   toggleSelect(e) {
-    var id = e.currentTarget.dataset.id
+    var cartKey = e.currentTarget.dataset.cartkey
     var cartItems = this.data.cartItems
     for (var i = 0; i < cartItems.length; i++) {
-      if (cartItems[i].id === id) {
+      if (cartItems[i].cartKey === cartKey) {
         cartItems[i].selected = !cartItems[i].selected
         break
       }
@@ -76,10 +85,10 @@ Page({
   },
 
   increase(e) {
-    var id = e.currentTarget.dataset.id
+    var cartKey = e.currentTarget.dataset.cartkey
     var cartItems = this.data.cartItems
     for (var i = 0; i < cartItems.length; i++) {
-      if (cartItems[i].id === id) {
+      if (cartItems[i].cartKey === cartKey) {
         cartItems[i].quantity += 1
         break
       }
@@ -89,10 +98,10 @@ Page({
   },
 
   decrease(e) {
-    var id = e.currentTarget.dataset.id
+    var cartKey = e.currentTarget.dataset.cartkey
     var cartItems = this.data.cartItems
     for (var i = 0; i < cartItems.length; i++) {
-      if (cartItems[i].id === id) {
+      if (cartItems[i].cartKey === cartKey) {
         if (cartItems[i].quantity > 1) {
           cartItems[i].quantity -= 1
         }
@@ -104,11 +113,11 @@ Page({
   },
 
   deleteItem(e) {
-    var id = e.currentTarget.dataset.id
+    var cartKey = e.currentTarget.dataset.cartkey
     var cartItems = this.data.cartItems
     var newItems = []
     for (var i = 0; i < cartItems.length; i++) {
-      if (cartItems[i].id !== id) {
+      if (cartItems[i].cartKey !== cartKey) {
         newItems.push(cartItems[i])
       }
     }
@@ -130,6 +139,26 @@ Page({
     if (selectedItems.length === 0) {
       wx.showToast({ title: '请选择商品', icon: 'none' })
       return
+    }
+
+    var userInfo = wx.getStorageSync('userInfo')
+    var totalPoints = 0
+    for (var i = 0; i < selectedItems.length; i++) {
+      if (selectedItems[i].isPointsExchange && selectedItems[i].requiredPoints) {
+        totalPoints += selectedItems[i].requiredPoints * selectedItems[i].quantity
+      }
+    }
+
+    if (totalPoints > 0) {
+      if (!userInfo || !userInfo.id) {
+        wx.showToast({ title: '请先登录', icon: 'none' })
+        return
+      }
+      var userPoints = userInfo.points || 0
+      if (userPoints < totalPoints) {
+        wx.showToast({ title: '积分不足，需要' + totalPoints + '积分', icon: 'none' })
+        return
+      }
     }
 
     wx.setStorageSync('cartItems', cartItems)

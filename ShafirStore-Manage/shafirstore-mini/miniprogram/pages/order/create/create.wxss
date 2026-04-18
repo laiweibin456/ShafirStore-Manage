@@ -101,6 +101,30 @@
   font-weight: bold;
 }
 
+.item-price.points-price {
+  color: #67C23A;
+}
+
+.points-exchange-tag {
+  display: inline-block;
+  background-color: #FFF7E6;
+  border: 1rpx solid #E6A23C;
+  border-radius: 4rpx;
+  padding: 4rpx 12rpx;
+  margin-top: 8rpx;
+}
+
+.points-exchange-tag text {
+  font-size: 22rpx;
+  color: #E6A23C;
+}
+
+.points-cost {
+  font-size: 22rpx;
+  color: #E6A23C;
+  margin-left: 8rpx;
+}
+
 .item-qty {
   font-size: 26rpx;
   color: #999999;
@@ -194,6 +218,10 @@
 
 .price-value.discount {
   color: #67C23A;
+}
+
+.price-value.points {
+  color: #E6A23C;
 }
 
 .total-price {

@@ -4,23 +4,102 @@
   <view class="points-overview">
     <text class="points-value">{{points}}</text>
     <text class="points-label">当前积分</text>
+    <text class="points-tip">积分可兑换商品，所需积分 = 商品价格 × 3</text>
   </view>
 
-  <!-- 积分记录 -->
-  <view class="record-list">
-    <view class="record-item" wx:for="{{records}}" wx:key="id">
-      <view class="record-info">
-        <text class="record-type">{{item.type === 1 ? '获得' : '消耗'}}</text>
-        <text class="record-remark">{{item.remark}}</text>
-        <text class="record-time">{{item.createTime}}</text>
-      </view>
-      <text class="record-points {{item.type === 1 ? 'add' : 'minus'}}">
-        {{item.type === 1 ? '+' : '-'}}{{item.points}}
-      </text>
+  <!-- Tab切换 -->
+  <view class="tab-container">
+    <view class="tab-item {{activeTab === 'exchange' ? 'active' : ''}}" bindtap="switchTab" data-tab="exchange">
+      <text>积分兑换</text>
+    </view>
+    <view class="tab-item {{activeTab === 'records' ? 'active' : ''}}" bindtap="switchTab" data-tab="records">
+      <text>积分记录</text>
     </view>
   </view>
 
-  <view class="empty" wx:if="{{records.length === 0}}">
-    <text>暂无积分记录</text>
+  <!-- 积分兑换商品列表 -->
+  <view class="exchange-section" wx:if="{{activeTab === 'exchange'}}">
+    <view class="product-list" wx:if="{{exchangeProducts.length > 0}}">
+      <view 
+        class="product-item {{!item.canExchange ? 'disabled' : ''}}" 
+        wx:for="{{exchangeProducts}}" 
+        wx:key="id"
+        bindtap="handleExchange"
+        data-product="{{item}}"
+      >
+        <view class="product-image">
+          <image wx:if="{{item.imageUrl}}" src="{{item.imageUrl}}" mode="aspectFill"></image>
+          <view wx:else class="image-placeholder">
+            <text>商品</text>
+          </view>
+        </view>
+        <view class="product-info">
+          <text class="product-name">{{item.name}}</text>
+          <text class="product-price">¥{{item.price}}</text>
+          <view class="product-meta">
+            <text class="product-points">所需积分: {{item.requiredPoints}}</text>
+            <text class="product-stock">库存: {{item.stockQuantity}}</text>
+          </view>
+        </view>
+        <view class="exchange-btn {{item.canExchange ? '' : 'disabled'}}">
+          <text>{{item.canExchange ? '兑换' : '不可兑换'}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="empty" wx:else>
+      <text>暂无可兑换商品</text>
+    </view>
+  </view>
+
+  <!-- 积分记录列表 -->
+  <view class="records-section" wx:if="{{activeTab === 'records'}}">
+    <view class="record-list" wx:if="{{records.length > 0}}">
+      <view class="record-item" wx:for="{{records}}" wx:key="id">
+        <view class="record-info">
+          <text class="record-type">{{item.type === 1 ? '获得' : '消耗'}}</text>
+          <text class="record-remark">{{item.remark}}</text>
+          <text class="record-time">{{item.createTime}}</text>
+        </view>
+        <text class="record-points {{item.type === 1 ? 'add' : 'minus'}}">
+          {{item.type === 1 ? '+' : '-'}}{{item.points}}
+        </text>
+      </view>
+    </view>
+    <view class="empty" wx:else>
+      <text>暂无积分记录</text>
+    </view>
+  </view>
+</view>
+
+<!-- 兑换确认弹窗 -->
+<view class="modal-mask" wx:if="{{showExchangeModal}}" bindtap="hideExchangeModal">
+  <view class="modal-content" catchtap>
+    <view class="modal-title">确认兑换</view>
+    <view class="modal-body" wx:if="{{selectedProduct}}">
+      <view class="modal-row">
+        <text class="modal-label">商品名称</text>
+        <text class="modal-value">{{selectedProduct.name}}</text>
+      </view>
+      <view class="modal-row">
+        <text class="modal-label">商品价格</text>
+        <text class="modal-value">¥{{selectedProduct.price}}</text>
+      </view>
+      <view class="modal-row">
+        <text class="modal-label">所需积分</text>
+        <text class="modal-value highlight">{{selectedProduct.requiredPoints}}</text>
+      </view>
+      <view class="modal-row">
+        <text class="modal-label">当前积分</text>
+        <text class="modal-value">{{points}}</text>
+      </view>
+      <view class="modal-row">
+        <text class="modal-label">兑换后积分</text>
+        <text class="modal-value">{{points - selectedProduct.requiredPoints}}</text>
+      </view>
+    </view>
+    <view class="modal-footer">
+      <view class="modal-btn cancel" bindtap="hideExchangeModal">取消</view>
+      <view class="modal-btn confirm" bindtap="confirmExchange">确认兑换</view>
+    </view>
   </view>
 </view>

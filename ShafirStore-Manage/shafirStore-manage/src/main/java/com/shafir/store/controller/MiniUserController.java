@@ -1,6 +1,8 @@
 package com.shafir.store.controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.shafir.store.common.result.Result;
+import com.shafir.store.entity.MemberPointsRecord;
 import com.shafir.store.security.SecurityUser;
 import com.shafir.store.service.MiniUserService;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -81,6 +84,57 @@ public class MiniUserController {
         log.info("更新用户信息: userId={}, nickname={}", userId, nickname);
 
         boolean result = miniUserService.updateUserInfo(userId, userType, nickname);
+        return Result.success(result);
+    }
+
+    @GetMapping("/points-records")
+    public Result<IPage<MemberPointsRecord>> getPointsRecords(
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof SecurityUser)) {
+            return Result.error(401, "请先登录");
+        }
+
+        SecurityUser securityUser = (SecurityUser) auth.getPrincipal();
+        Long userId = securityUser.getUserId();
+
+        log.info("获取积分记录: userId={}, pageNum={}, pageSize={}", userId, pageNum, pageSize);
+
+        IPage<MemberPointsRecord> records = miniUserService.getPointsRecords(userId, pageNum, pageSize);
+        return Result.success(records);
+    }
+
+    @GetMapping("/exchange-products")
+    public Result<List<Map<String, Object>>> getExchangeProducts() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof SecurityUser)) {
+            return Result.error(401, "请先登录");
+        }
+
+        SecurityUser securityUser = (SecurityUser) auth.getPrincipal();
+        Long userId = securityUser.getUserId();
+
+        log.info("获取可兑换商品列表: userId={}", userId);
+
+        List<Map<String, Object>> products = miniUserService.getExchangeProducts(userId);
+        return Result.success(products);
+    }
+
+    @PostMapping("/exchange")
+    public Result<Boolean> exchangeProduct(@RequestBody Map<String, Long> params) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof SecurityUser)) {
+            return Result.error(401, "请先登录");
+        }
+
+        SecurityUser securityUser = (SecurityUser) auth.getPrincipal();
+        Long userId = securityUser.getUserId();
+        Long productId = params.get("productId");
+
+        log.info("积分兑换商品: userId={}, productId={}", userId, productId);
+
+        boolean result = miniUserService.exchangeProduct(userId, productId);
         return Result.success(result);
     }
 }

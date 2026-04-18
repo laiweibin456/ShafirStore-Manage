@@ -42,6 +42,7 @@ public class OrderController {
                 Integer.valueOf(params.get("pointsEarned").toString()) : null;
         Integer pointsDeduct = params.get("pointsDeduct") != null ?
                 Integer.valueOf(params.get("pointsDeduct").toString()) : null;
+        List<Map<String, Object>> itemDetails = (List<Map<String, Object>>) params.get("itemDetails");
 
         Long operatorId = getCurrentUserId();
 
@@ -49,7 +50,7 @@ public class OrderController {
                 productIds, quantities, memberId, payType, pointsEarned, pointsDeduct);
 
         Order order = orderService.createOrder(productIds, quantities, memberId, payType, operatorId, remark,
-                pointsEarned, pointsDeduct);
+                pointsEarned, pointsDeduct, itemDetails);
         return Result.success(order);
     }
 

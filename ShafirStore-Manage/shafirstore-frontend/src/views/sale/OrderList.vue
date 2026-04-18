@@ -151,9 +151,18 @@
 
         <h4 class="items-title">商品明细</h4>
         <el-table :data="currentOrder.items" border size="small">
-          <el-table-column prop="productName" label="商品名称" />
-          <el-table-column prop="price" label="单价" width="100">
-            <template #default="{ row }">¥{{ row.price }}</template>
+          <el-table-column prop="productName" label="商品名称">
+            <template #default="{ row }">
+              {{ row.productName }}
+              <el-tag v-if="row.isPointsExchange" type="warning" size="small" style="margin-left: 8px">积分兑换</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="price" label="单价" width="120">
+            <template #default="{ row }">
+              <span :class="{ 'points-price': row.isPointsExchange }">¥{{ row.price }}</span>
+              <span v-if="row.originalPrice" class="original-price">原价: ¥{{ row.originalPrice }}</span>
+              <span v-if="row.isPointsExchange && row.requiredPoints" class="points-cost">({{ row.requiredPoints }}积分)</span>
+            </template>
           </el-table-column>
           <el-table-column prop="quantity" label="数量" width="80" />
           <el-table-column prop="subtotal" label="小计" width="100">
@@ -171,6 +180,10 @@
           <div class="summary-row" v-if="currentOrder.discountAmount > 0">
             <span>优惠金额：</span>
             <span>-¥{{ currentOrder.discountAmount }}</span>
+          </div>
+          <div class="summary-row" v-if="currentOrder.pointsDiscount > 0">
+            <span>积分消耗：</span>
+            <span class="points-deduct">-{{ currentOrder.pointsDiscount }} 积分</span>
           </div>
           <div class="summary-row total">
             <span>实付金额：</span>
@@ -454,5 +467,28 @@ onMounted(() => {
 
 .summary-row.total span:last-child {
   color: #f56c6c;
+}
+
+.points-price {
+  color: #67c23a;
+  font-weight: 600;
+}
+
+.original-price {
+  color: #999;
+  font-size: 12px;
+  text-decoration: line-through;
+  margin-left: 4px;
+}
+
+.points-cost {
+  color: #e6a23c;
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+.points-deduct {
+  color: #e6a23c;
+  font-weight: 600;
 }
 </style>

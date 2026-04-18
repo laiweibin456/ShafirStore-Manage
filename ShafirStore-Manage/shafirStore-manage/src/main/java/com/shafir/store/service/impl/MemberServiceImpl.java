@@ -262,7 +262,6 @@ public class MemberServiceImpl implements MemberService {
         if (storeId != null) {
             MemberStoreRel rel = memberStoreRelRepository.findByMemberIdAndStoreId(member.getId(), storeId);
             if (rel != null) {
-                member.setPoints(rel.getPoints());
                 member.setTotalConsume(rel.getTotalConsume());
                 member.setLevel(rel.getLevel());
                 LambdaQueryWrapper<MemberLevel> relLevelWrapper = new LambdaQueryWrapper<>();
@@ -273,6 +272,34 @@ public class MemberServiceImpl implements MemberService {
                 if (level != null) {
                     member.setLevelName(level.getName());
                 }
+            }
+        } else {
+            LambdaQueryWrapper<MemberStoreRel> relWrapper = new LambdaQueryWrapper<>();
+            relWrapper.eq(MemberStoreRel::getMemberId, member.getId());
+            List<MemberStoreRel> rels = memberStoreRelRepository.selectList(relWrapper);
+            
+            BigDecimal totalConsume = BigDecimal.ZERO;
+            int highestLevel = 1;
+            
+            for (MemberStoreRel rel : rels) {
+                if (rel.getTotalConsume() != null) {
+                    totalConsume = totalConsume.add(rel.getTotalConsume());
+                }
+                if (rel.getLevel() != null && rel.getLevel() > highestLevel) {
+                    highestLevel = rel.getLevel();
+                }
+            }
+            
+            member.setTotalConsume(totalConsume);
+            member.setLevel(highestLevel);
+            
+            LambdaQueryWrapper<MemberLevel> relLevelWrapper = new LambdaQueryWrapper<>();
+            relLevelWrapper.eq(MemberLevel::getLevel, highestLevel);
+            relLevelWrapper.orderByAsc(MemberLevel::getId);
+            relLevelWrapper.last("LIMIT 1");
+            MemberLevel level = memberLevelRepository.selectOne(relLevelWrapper);
+            if (level != null) {
+                member.setLevelName(level.getName());
             }
         }
     }

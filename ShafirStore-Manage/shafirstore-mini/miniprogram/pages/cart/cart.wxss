@@ -75,6 +75,51 @@
   margin-top: 16rpx;
 }
 
+.item-price.points-price {
+  color: #52C41A;
+}
+
+.price-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  margin-top: 16rpx;
+}
+
+.points-exchange-tag {
+  display: inline-block;
+  background-color: #FFF7E6;
+  border: 1rpx solid #E6A23C;
+  border-radius: 4rpx;
+  padding: 4rpx 12rpx;
+  margin-top: 8rpx;
+}
+
+.points-exchange-tag text {
+  font-size: 22rpx;
+  color: #E6A23C;
+}
+
+.points-info {
+  font-size: 22rpx;
+  color: #E6A23C;
+  margin-left: 8rpx;
+}
+
+.original-price {
+  font-size: 22rpx;
+  color: #999999;
+  text-decoration: line-through;
+  margin-left: 8rpx;
+}
+
+.total-points {
+  font-size: 24rpx;
+  color: #E6A23C;
+  margin-left: 8rpx;
+}
+
 .item-actions {
   display: flex;
   flex-direction: column;

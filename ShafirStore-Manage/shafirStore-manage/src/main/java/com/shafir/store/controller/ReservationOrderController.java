@@ -40,11 +40,14 @@ public class ReservationOrderController {
                 .map(q -> Integer.valueOf(q.toString())).toList();
         String pickupTime = (String) params.get("pickupTime");
         String remark = (String) params.get("remark");
+        Integer pointsDeduct = params.get("pointsDeduct") != null ?
+                Integer.valueOf(params.get("pointsDeduct").toString()) : null;
+        List<Map<String, Object>> itemDetails = (List<Map<String, Object>>) params.get("itemDetails");
 
-        log.info("创建预约订单: userId={}, userType={}, productIds={}", userId, userType, productIds);
+        log.info("创建预约订单: userId={}, userType={}, productIds={}, pointsDeduct={}", userId, userType, productIds, pointsDeduct);
 
         Map<String, Object> result = reservationOrderService.createOrder(
-                productIds, quantities, pickupTime, remark, userId, userType);
+                productIds, quantities, pickupTime, remark, userId, userType, pointsDeduct, itemDetails);
         return Result.success(result);
     }
 

@@ -81,5 +81,8 @@ module.exports = {
   getOrderDetail: function(id) { return request({ url: '/orders/' + id }) },
   cancelOrder: function(id) { return request({ url: '/orders/' + id + '/cancel', method: 'PUT' }) },
   getAllStores: function() { return request({ url: '/stores/all' }) },
-  getStoreDetail: function(id) { return request({ url: '/stores/' + id }) }
+  getStoreDetail: function(id) { return request({ url: '/stores/' + id }) },
+  getPointsRecords: function(params) { return request({ url: '/mini/points-records', params: params }) },
+  getExchangeProducts: function() { return request({ url: '/mini/exchange-products' }) },
+  exchangeProduct: function(productId) { return request({ url: '/mini/exchange', method: 'POST', data: { productId: productId } }) }
 }

@@ -1,7 +1,7 @@
 <view class="cart-page">
   <view class="cart-list" wx:if="{{cartItems.length > 0}}">
-    <view class="cart-item" wx:for="{{cartItems}}" wx:key="id">
-      <view class="item-checkbox" bindtap="toggleSelect" data-id="{{item.id}}">
+    <view class="cart-item" wx:for="{{cartItems}}" wx:key="cartKey">
+      <view class="item-checkbox" bindtap="toggleSelect" data-cartkey="{{item.cartKey}}">
         <view class="checkbox {{item.selected ? 'checked' : ''}}">
           <text wx:if="{{item.selected}}">✓</text>
         </view>
@@ -9,15 +9,22 @@
       <image class="item-image" src="{{item.imageUrl || '/images/placeholder.jpg'}}" mode="aspectFill" />
       <view class="item-info">
         <text class="item-name">{{item.name}}</text>
-        <text class="item-price">¥{{item.price}}</text>
+        <view wx:if="{{item.isPointsExchange}}" class="points-exchange-tag">
+          <text>积分兑换</text>
+        </view>
+        <view class="price-row">
+          <text class="item-price {{item.isPointsExchange ? 'points-price' : ''}}">¥{{item.price}}</text>
+          <text wx:if="{{item.isPointsExchange}}" class="points-info">({{item.requiredPoints}}积分)</text>
+          <text wx:if="{{item.originalPrice}}" class="original-price">¥{{item.originalPrice}}</text>
+        </view>
       </view>
       <view class="item-actions">
         <view class="quantity-control">
-          <view class="qty-btn" bindtap="decrease" data-id="{{item.id}}">-</view>
+          <view class="qty-btn" bindtap="decrease" data-cartkey="{{item.cartKey}}">-</view>
           <text class="qty-num">{{item.quantity}}</text>
-          <view class="qty-btn" bindtap="increase" data-id="{{item.id}}">+</view>
+          <view class="qty-btn" bindtap="increase" data-cartkey="{{item.cartKey}}">+</view>
         </view>
-        <view class="delete-btn" bindtap="deleteItem" data-id="{{item.id}}">删除</view>
+        <view class="delete-btn" bindtap="deleteItem" data-cartkey="{{item.cartKey}}">删除</view>
       </view>
     </view>
   </view>
@@ -38,6 +45,7 @@
     <view class="total-info">
       <text class="total-label">合计：</text>
       <text class="total-price">¥{{totalPrice}}</text>
+      <text wx:if="{{totalPoints > 0}}" class="total-points">({{totalPoints}}积分)</text>
     </view>
     <view class="checkout-btn {{selectedCount > 0 ? '' : 'disabled'}}" bindtap="checkout">结算({{selectedCount}})</view>
   </view>

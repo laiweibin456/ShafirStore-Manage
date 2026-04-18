@@ -16,7 +16,8 @@ Page({
     timeRange: [[], []],
     submitting: false,
     currentStoreName: '',
-    hasStore: false
+    hasStore: false,
+    totalPoints: 0
   },
 
   onLoad() {
@@ -101,14 +102,19 @@ Page({
     }
 
     var totalAmount = 0
+    var totalPoints = 0
     for (var j = 0; j < selectedItems.length; j++) {
       totalAmount += selectedItems[j].price * selectedItems[j].quantity
+      if (selectedItems[j].isPointsExchange && selectedItems[j].requiredPoints) {
+        totalPoints += selectedItems[j].requiredPoints * selectedItems[j].quantity
+      }
     }
 
     this.setData({
       orderItems: selectedItems,
       totalAmount: totalAmount.toFixed(2),
-      payAmount: totalAmount.toFixed(2)
+      payAmount: totalAmount.toFixed(2),
+      totalPoints: totalPoints
     })
   },
 
@@ -186,23 +192,52 @@ Page({
       return
     }
 
+    if (this.data.totalPoints > 0) {
+      var userInfo = wx.getStorageSync('userInfo')
+      if (!userInfo || !userInfo.id) {
+        wx.showToast({ title: '请先登录', icon: 'none' })
+        return
+      }
+      var userPoints = userInfo.points || 0
+      if (userPoints < this.data.totalPoints) {
+        wx.showToast({ title: '积分不足，需要' + this.data.totalPoints + '积分', icon: 'none' })
+        return
+      }
+    }
+
     if (this.data.submitting) return
     this.setData({ submitting: true })
 
     var productIds = []
     var quantities = []
+    var itemDetails = []
     for (var i = 0; i < this.data.orderItems.length; i++) {
-      productIds.push(this.data.orderItems[i].id)
-      quantities.push(this.data.orderItems[i].quantity)
+      var item = this.data.orderItems[i]
+      productIds.push(item.id)
+      quantities.push(item.quantity)
+      itemDetails.push({
+        productId: item.id,
+        price: item.price,
+        originalPrice: item.originalPrice || null,
+        isPointsExchange: item.isPointsExchange || false,
+        requiredPoints: item.requiredPoints || null
+      })
+    }
+
+    var orderData = {
+      productIds: productIds,
+      quantities: quantities,
+      itemDetails: itemDetails,
+      pickupTime: this.data.pickupTime,
+      remark: this.data.remark
+    }
+
+    if (this.data.totalPoints > 0) {
+      orderData.pointsDeduct = this.data.totalPoints
     }
 
     var that = this
-    wx.$request.createReservationOrder({
-      productIds: productIds,
-      quantities: quantities,
-      pickupTime: this.data.pickupTime,
-      remark: this.data.remark
-    })
+    wx.$request.createReservationOrder(orderData)
       .then(function(res) {
         var cartItems = wx.getStorageSync('cartItems') || []
         var remainingItems = []
@@ -213,6 +248,8 @@ Page({
         }
         wx.setStorageSync('cartItems', remainingItems)
 
+        that.refreshUserInfo()
+
         wx.showToast({ title: '预约成功', icon: 'success' })
         setTimeout(function() {
           wx.switchTab({ url: '/pages/order/list/list' })
@@ -221,6 +258,18 @@ Page({
       .catch(function(err) {
         console.error('创建订单失败', err)
         that.setData({ submitting: false })
+      })
+  },
+
+  refreshUserInfo: function() {
+    wx.$request.getMiniUserInfo()
+      .then(function(res) {
+        if (res.data) {
+          wx.setStorageSync('userInfo', res.data)
+        }
+      })
+      .catch(function(err) {
+        console.error('刷新用户信息失败', err)
       })
   }
 })

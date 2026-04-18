@@ -114,9 +114,10 @@ Page({
     }
 
     var cartItems = wx.getStorageSync('cartItems') || []
+    var cartKey = product.id + '_normal'
     var existIndex = -1
     for (var i = 0; i < cartItems.length; i++) {
-      if (cartItems[i].id === product.id) {
+      if (cartItems[i].cartKey === cartKey) {
         existIndex = i
         break
       }
@@ -126,12 +127,14 @@ Page({
       cartItems[existIndex].quantity += 1
     } else {
       cartItems.push({
+        cartKey: cartKey,
         id: product.id,
         name: product.name,
         price: product.price,
         imageUrl: product.imageUrl,
         quantity: 1,
-        selected: true
+        selected: true,
+        isPointsExchange: false
       })
     }
 

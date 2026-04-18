@@ -81,8 +81,16 @@
               class="cart-item"
             >
               <div class="item-info">
-                <div class="item-name">{{ item.name }}</div>
-                <div class="item-price">¥{{ item.price }} × {{ item.quantity }}</div>
+                <div class="item-name">
+                  {{ item.name }}
+                  <el-tag v-if="item.isPointsExchange" type="warning" size="small" style="margin-left: 8px">积分兑换</el-tag>
+                </div>
+                <div class="item-price">
+                  <span :class="{ 'points-price': item.isPointsExchange }">¥{{ item.price }}</span>
+                  <span v-if="item.isPointsExchange" class="points-cost">({{ item.requiredPoints }}积分)</span>
+                  <span v-if="item.originalPrice" class="original-price-text">原价: ¥{{ item.originalPrice }}</span>
+                  <span v-if="!item.isPointsExchange"> × {{ item.quantity }}</span>
+                </div>
               </div>
               <div class="item-actions">
                 <el-input-number
@@ -110,6 +118,10 @@
             <div class="summary-row" v-if="currentMember">
               <span>会员折扣：</span>
               <span class="discount-tag">{{ getDiscountText() }}</span>
+            </div>
+            <div class="summary-row" v-if="totalExchangePoints > 0">
+              <span>积分消耗：</span>
+              <span class="points-tag">{{ totalExchangePoints }} 积分</span>
             </div>
             <div class="summary-row">
               <span>订单总额：</span>
@@ -139,6 +151,7 @@
                 <span class="member-name">{{ currentMember.name }}</span>
                 <span class="member-points">积分: {{ currentMember.points || 0 }}</span>
                 <span class="member-discount">{{ getDiscountText() }}</span>
+                <el-button type="warning" size="small" @click="showPointsExchangeDialog">积分兑换</el-button>
               </div>
               <div v-else-if="memberSearched" class="member-not-found">
                 未找到该会员
@@ -362,6 +375,15 @@ const totalAmount = computed(() => {
   return cartItems.value.reduce((sum, item) => sum + item.price * item.quantity, 0)
 })
 
+const totalExchangePoints = computed(() => {
+  return cartItems.value.reduce((sum, item) => {
+    if (item.isPointsExchange && item.requiredPoints) {
+      return sum + item.requiredPoints * item.quantity
+    }
+    return sum
+  }, 0)
+})
+
 const fetchProducts = async () => {
   loadingProducts.value = true
   try {
@@ -548,33 +570,38 @@ const handleExchangeProduct = (product) => {
 
 const confirmExchange = async () => {
   if (!exchangeProduct.value || !currentMember.value) return
-  exchangeLoading.value = true
-  try {
-    const requiredPoints = getRequiredPoints(exchangeProduct.value)
-    const orderData = {
-      productIds: [exchangeProduct.value.productId || exchangeProduct.value.id],
-      quantities: [1],
-      memberId: currentMember.value.id,
-      payType: 5,
-      remark: `积分兑换，消耗 ${requiredPoints} 积分`,
-      pointsDeduct: requiredPoints
-    }
-    await createOrder(orderData)
-    const newPoints = (currentMember.value.points || 0) - requiredPoints
-    currentMember.value = { ...currentMember.value, points: newPoints }
-    exchangeProduct.value.stockQuantity = (exchangeProduct.value.stockQuantity || 0) - 1
-    const productIndex = productList.value.findIndex(p => p.id === (exchangeProduct.value.productId || exchangeProduct.value.id))
-    if (productIndex !== -1) {
-      productList.value[productIndex].stockQuantity = Math.max(0, (productList.value[productIndex].stockQuantity || 0) - 1)
-    }
-    ElMessage.success('积分兑换成功！')
-    exchangeConfirmVisible.value = false
-    exchangeProduct.value = null
-  } catch (error) {
-    ElMessage.error(error.message || '积分兑换失败')
-  } finally {
-    exchangeLoading.value = false
+  
+  const requiredPoints = getRequiredPoints(exchangeProduct.value)
+  const totalPointsNeeded = totalExchangePoints.value + requiredPoints
+  
+  if ((currentMember.value.points || 0) < totalPointsNeeded) {
+    ElMessage.warning(`积分不足，当前购物车已消耗 ${totalExchangePoints.value} 积分，再加此商品需要 ${totalPointsNeeded} 积分`)
+    return
   }
+
+  const existingItem = cartItems.value.find(item => 
+    item.productId === exchangeProduct.value.id && item.isPointsExchange
+  )
+
+  if (existingItem) {
+    existingItem.quantity++
+  } else {
+    cartItems.value.push({
+      productId: exchangeProduct.value.id,
+      name: exchangeProduct.value.name,
+      price: 0,
+      originalPrice: exchangeProduct.value.price,
+      quantity: 1,
+      stockQuantity: exchangeProduct.value.stockQuantity,
+      unit: exchangeProduct.value.unit,
+      isPointsExchange: true,
+      requiredPoints: requiredPoints
+    })
+  }
+
+  ElMessage.success('已加入购物车')
+  exchangeConfirmVisible.value = false
+  exchangeProduct.value = null
 }
 
 const handleSubmitOrder = async () => {
@@ -583,32 +610,64 @@ const handleSubmitOrder = async () => {
     return
   }
 
+  if (totalExchangePoints.value > 0 && !currentMember.value) {
+    ElMessage.warning('购物车中有积分兑换商品，请先查询会员')
+    return
+  }
+
+  if (totalExchangePoints.value > 0 && (currentMember.value.points || 0) < totalExchangePoints.value) {
+    ElMessage.warning(`积分不足，需要 ${totalExchangePoints.value} 积分，当前 ${currentMember.value.points} 积分`)
+    return
+  }
+
   submitting.value = true
   try {
     const productIds = cartItems.value.map(item => item.productId)
     const quantities = cartItems.value.map(item => item.quantity)
+    const itemDetails = cartItems.value.map(item => ({
+      productId: item.productId,
+      price: item.price,
+      originalPrice: item.originalPrice || null,
+      isPointsExchange: item.isPointsExchange || false,
+      requiredPoints: item.requiredPoints || null
+    }))
 
     let pointsEarned = 0
     if (currentMember.value) {
       pointsEarned = Math.floor(finalAmount.value / 10)
     }
 
-    await createOrder({
+    const orderData = {
       productIds,
       quantities,
+      itemDetails,
       memberId: currentMember.value?.id || null,
       payType: payType.value,
       remark: remark.value,
       pointsEarned
-    })
+    }
 
-    ElMessage.success('订单创建成功！' + (pointsEarned > 0 ? ` 会员获得 ${pointsEarned} 积分` : ''))
+    if (totalExchangePoints.value > 0) {
+      orderData.pointsDeduct = totalExchangePoints.value
+    }
+
+    await createOrder(orderData)
+
+    let successMsg = '订单创建成功！'
+    if (pointsEarned > 0) {
+      successMsg += ` 会员获得 ${pointsEarned} 积分`
+    }
+    if (totalExchangePoints.value > 0) {
+      successMsg += `，消耗 ${totalExchangePoints.value} 积分`
+    }
+
+    ElMessage.success(successMsg)
 
     cartItems.value = []
     remark.value = ''
-    if (currentMember.value && pointsEarned > 0) {
-      const newPoints = (currentMember.value.points || 0) + pointsEarned
-      currentMember.value = { ...currentMember.value, points: newPoints }
+    if (currentMember.value) {
+      let newPoints = (currentMember.value.points || 0) + pointsEarned - totalExchangePoints.value
+      currentMember.value = { ...currentMember.value, points: Math.max(0, newPoints) }
     }
 
     await fetchProducts()
@@ -1024,5 +1083,27 @@ onMounted(() => {
   color: #409eff;
   font-weight: 600;
   margin-top: 16px;
+}
+
+.points-price {
+  color: #67c23a !important;
+}
+
+.points-cost {
+  color: #e6a23c;
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+.original-price-text {
+  color: #999;
+  font-size: 12px;
+  text-decoration: line-through;
+  margin-left: 4px;
+}
+
+.points-tag {
+  color: #e6a23c;
+  font-weight: 600;
 }
 </style>

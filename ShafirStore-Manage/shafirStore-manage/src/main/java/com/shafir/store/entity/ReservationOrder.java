@@ -35,6 +35,8 @@ public class ReservationOrder implements Serializable {
 
     private String remark;
 
+    private Integer pointsDeduct;
+
     private LocalDateTime createTime;
 
     private LocalDateTime updateTime;

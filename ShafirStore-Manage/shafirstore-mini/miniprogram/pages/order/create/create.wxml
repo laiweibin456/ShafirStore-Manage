@@ -14,8 +14,12 @@
       <image class="item-image" src="{{item.imageUrl || '/images/placeholder.jpg'}}" mode="aspectFill" />
       <view class="item-info">
         <text class="item-name">{{item.name}}</text>
+        <view wx:if="{{item.isPointsExchange}}" class="points-exchange-tag">
+          <text>积分兑换</text>
+        </view>
         <view class="item-bottom">
-          <text class="item-price">¥{{item.price}}</text>
+          <text class="item-price {{item.isPointsExchange ? 'points-price' : ''}}">¥{{item.price}}</text>
+          <text wx:if="{{item.isPointsExchange}}" class="points-cost">({{item.requiredPoints}}积分)</text>
           <text class="item-qty">x{{item.quantity}}</text>
         </view>
       </view>
@@ -62,6 +66,10 @@
     <view class="price-row" wx:if="{{discountAmount > 0}}">
       <text class="price-label">会员折扣({{discount * 10}}折)</text>
       <text class="price-value discount">-¥{{discountAmount}}</text>
+    </view>
+    <view class="price-row" wx:if="{{totalPoints > 0}}">
+      <text class="price-label">积分消耗</text>
+      <text class="price-value points">-{{totalPoints}}积分</text>
     </view>
     <view class="price-row total">
       <text class="price-label">实付金额</text>

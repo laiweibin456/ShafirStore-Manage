@@ -34,6 +34,8 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final MemberRepository memberRepository;
     private final MemberPointsRecordRepository memberPointsRecordRepository;
+    private final MemberStoreRelRepository memberStoreRelRepository;
+    private final MemberLevelRepository memberLevelRepository;
 
     private static final Map<Integer, BigDecimal> DISCOUNT_MAP = Map.of(
             1, new BigDecimal("1.00"),
@@ -48,7 +50,8 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Order createOrder(List<Long> productIds, List<Integer> quantities, Long memberId,
-                            Integer payType, Long operatorId, String remark, Integer pointsEarned, Integer pointsDeduct) {
+                            Integer payType, Long operatorId, String remark, Integer pointsEarned, 
+                            Integer pointsDeduct, List<Map<String, Object>> itemDetails) {
         if (productIds == null || productIds.isEmpty()) {
             throw new BusinessException("请选择商品");
         }
@@ -90,15 +93,39 @@ public class OrderServiceImpl implements OrderService {
                         (inventory != null ? inventory.getQuantity() : 0));
             }
 
-            BigDecimal subtotal = product.getPrice().multiply(BigDecimal.valueOf(quantity));
+            Map<String, Object> itemDetail = itemDetails != null && i < itemDetails.size() ? itemDetails.get(i) : null;
+            BigDecimal itemPrice = product.getPrice();
+            BigDecimal originalPrice = null;
+            Boolean isPointsExchange = false;
+            Integer requiredPoints = null;
+
+            if (itemDetail != null) {
+                if (itemDetail.get("price") != null) {
+                    itemPrice = new BigDecimal(itemDetail.get("price").toString());
+                }
+                if (itemDetail.get("originalPrice") != null) {
+                    originalPrice = new BigDecimal(itemDetail.get("originalPrice").toString());
+                }
+                if (itemDetail.get("isPointsExchange") != null) {
+                    isPointsExchange = Boolean.valueOf(itemDetail.get("isPointsExchange").toString());
+                }
+                if (itemDetail.get("requiredPoints") != null) {
+                    requiredPoints = Integer.valueOf(itemDetail.get("requiredPoints").toString());
+                }
+            }
+
+            BigDecimal subtotal = itemPrice.multiply(BigDecimal.valueOf(quantity));
 
             OrderItem item = new OrderItem();
             item.setStoreId(StoreContext.getCurrentStoreId());
             item.setProductId(productId);
             item.setProductName(product.getName());
-            item.setPrice(product.getPrice());
+            item.setPrice(itemPrice);
+            item.setOriginalPrice(originalPrice);
             item.setQuantity(quantity);
             item.setSubtotal(subtotal);
+            item.setIsPointsExchange(isPointsExchange);
+            item.setRequiredPoints(requiredPoints);
             item.setUnit(product.getUnit());
             item.setCreateTime(LocalDateTime.now());
             orderItems.add(item);
@@ -145,14 +172,49 @@ public class OrderServiceImpl implements OrderService {
 
         if (member != null) {
             int earnedPoints = order.getPayAmount().divide(BigDecimal.TEN, 0, RoundingMode.DOWN).intValue();
-            if (member.getTotalConsume() == null) {
-                member.setTotalConsume(BigDecimal.ZERO);
+            
+            Long storeId = StoreContext.getCurrentStoreId();
+            MemberStoreRel rel = null;
+            if (storeId != null) {
+                rel = memberStoreRelRepository.findByMemberIdAndStoreId(member.getId(), storeId);
+                if (rel == null) {
+                    rel = new MemberStoreRel();
+                    rel.setMemberId(member.getId());
+                    rel.setStoreId(storeId);
+                    rel.setTotalConsume(BigDecimal.ZERO);
+                    rel.setLevel(1);
+                    rel.setStatus(1);
+                    rel.setCreateTime(LocalDateTime.now());
+                    memberStoreRelRepository.insert(rel);
+                }
             }
-            if (member.getPoints() == null) {
-                member.setPoints(0);
+
+            int currentPoints = member.getPoints() != null ? member.getPoints() : 0;
+            BigDecimal currentConsume = rel != null ? (rel.getTotalConsume() != null ? rel.getTotalConsume() : BigDecimal.ZERO) :
+                                        (member.getTotalConsume() != null ? member.getTotalConsume() : BigDecimal.ZERO);
+
+            BigDecimal newTotalConsume = currentConsume.add(order.getPayAmount());
+            int newPoints = currentPoints + earnedPoints;
+
+            if (pointsDeduct != null && pointsDeduct > 0) {
+                if (newPoints < pointsDeduct) {
+                    throw new BusinessException("积分不足，需要 " + pointsDeduct + " 积分，当前 " + newPoints + " 积分");
+                }
+                newPoints -= pointsDeduct;
+
+                MemberPointsRecord deductRecord = new MemberPointsRecord();
+                deductRecord.setMemberId(member.getId());
+                deductRecord.setStoreId(storeId);
+                deductRecord.setType(2);
+                deductRecord.setPoints(pointsDeduct);
+                deductRecord.setBalance(newPoints);
+                deductRecord.setOrderId(order.getId());
+                deductRecord.setRemark("积分兑换商品");
+                deductRecord.setCreateTime(LocalDateTime.now());
+                memberPointsRecordRepository.insert(deductRecord);
+
+                order.setPointsDiscount(BigDecimal.valueOf(pointsDeduct));
             }
-            BigDecimal newTotalConsume = member.getTotalConsume().add(order.getPayAmount());
-            int newPoints = member.getPoints() + earnedPoints;
 
             Integer oldLevel = member.getLevel();
             Integer newLevel = calculateMemberLevel(newTotalConsume);
@@ -165,9 +227,19 @@ public class OrderServiceImpl implements OrderService {
             member.setUpdateTime(LocalDateTime.now());
             memberRepository.updateById(member);
 
+            if (rel != null) {
+                rel.setTotalConsume(newTotalConsume);
+                if (newLevel > (rel.getLevel() != null ? rel.getLevel() : 1)) {
+                    rel.setLevel(newLevel);
+                }
+                rel.setUpdateTime(LocalDateTime.now());
+                memberStoreRelRepository.updateById(rel);
+            }
+
             if (earnedPoints > 0) {
                 MemberPointsRecord pointsRecord = new MemberPointsRecord();
                 pointsRecord.setMemberId(member.getId());
+                pointsRecord.setStoreId(storeId);
                 pointsRecord.setType(1);
                 pointsRecord.setPoints(earnedPoints);
                 pointsRecord.setBalance(newPoints);
@@ -286,6 +358,30 @@ public class OrderServiceImpl implements OrderService {
             );
         }
 
+        if (order.getPointsDiscount() != null && order.getPointsDiscount().compareTo(BigDecimal.ZERO) > 0) {
+            if (order.getMemberId() != null) {
+                Member member = memberRepository.selectById(order.getMemberId());
+                if (member != null) {
+                    int refundPoints = order.getPointsDiscount().intValue();
+                    int currentPoints = member.getPoints() != null ? member.getPoints() : 0;
+                    int newPoints = currentPoints + refundPoints;
+                    member.setPoints(newPoints);
+                    member.setUpdateTime(LocalDateTime.now());
+                    memberRepository.updateById(member);
+
+                    MemberPointsRecord refundRecord = new MemberPointsRecord();
+                    refundRecord.setMemberId(member.getId());
+                    refundRecord.setStoreId(order.getStoreId());
+                    refundRecord.setType(1);
+                    refundRecord.setPoints(refundPoints);
+                    refundRecord.setBalance(newPoints);
+                    refundRecord.setRemark("取消销售订单，返还积分");
+                    refundRecord.setCreateTime(LocalDateTime.now());
+                    memberPointsRecordRepository.insert(refundRecord);
+                }
+            }
+        }
+
         order.setStatus(3);
         order.setUpdateTime(LocalDateTime.now());
         orderRepository.updateById(order);
@@ -316,6 +412,30 @@ public class OrderServiceImpl implements OrderService {
                     operatorId,
                     "订单退款退回，订单号：" + order.getOrderNo() + "，原因：" + reason
             );
+        }
+
+        if (order.getPointsDiscount() != null && order.getPointsDiscount().compareTo(BigDecimal.ZERO) > 0) {
+            if (order.getMemberId() != null) {
+                Member member = memberRepository.selectById(order.getMemberId());
+                if (member != null) {
+                    int refundPoints = order.getPointsDiscount().intValue();
+                    int currentPoints = member.getPoints() != null ? member.getPoints() : 0;
+                    int newPoints = currentPoints + refundPoints;
+                    member.setPoints(newPoints);
+                    member.setUpdateTime(LocalDateTime.now());
+                    memberRepository.updateById(member);
+
+                    MemberPointsRecord refundRecord = new MemberPointsRecord();
+                    refundRecord.setMemberId(member.getId());
+                    refundRecord.setStoreId(order.getStoreId());
+                    refundRecord.setType(1);
+                    refundRecord.setPoints(refundPoints);
+                    refundRecord.setBalance(newPoints);
+                    refundRecord.setRemark("订单退款，返还积分");
+                    refundRecord.setCreateTime(LocalDateTime.now());
+                    memberPointsRecordRepository.insert(refundRecord);
+                }
+            }
         }
 
         order.setStatus(4);

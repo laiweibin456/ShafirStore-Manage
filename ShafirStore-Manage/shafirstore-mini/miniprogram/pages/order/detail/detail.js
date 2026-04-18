@@ -47,6 +47,7 @@ Page({
           wx.$request.cancelReservationOrder(that.data.order.id)
             .then(function() {
               wx.showToast({ title: '订单已取消', icon: 'success' })
+              that.refreshUserInfo()
               that.loadOrderDetail(that.data.order.id)
             })
             .catch(function() {
@@ -55,6 +56,18 @@ Page({
         }
       }
     })
+  },
+
+  refreshUserInfo() {
+    wx.$request.getMiniUserInfo()
+      .then(function(res) {
+        if (res.data) {
+          wx.setStorageSync('userInfo', res.data)
+        }
+      })
+      .catch(function(err) {
+        console.error('刷新用户信息失败', err)
+      })
   },
 
   goToProductList() {
