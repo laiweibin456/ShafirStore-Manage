@@ -17,7 +17,7 @@ public interface MiniUserService {
 
     Map<String, Object> getUserInfo(Long userId, Integer userType);
 
-    boolean updateUserInfo(Long userId, Integer userType, String nickname);
+    boolean updateUserInfo(Long userId, Integer userType, String nickname, String oldPassword, String newPassword);
 
     Member upgradeToMember(RegularUser user);
 

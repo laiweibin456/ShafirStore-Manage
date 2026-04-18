@@ -80,10 +80,12 @@ public class MiniUserController {
         Long userId = securityUser.getUserId();
         Integer userType = "member".equals(securityUser.getRole()) ? 2 : 1;
         String nickname = params.get("nickname");
+        String oldPassword = params.get("oldPassword");
+        String newPassword = params.get("newPassword");
 
-        log.info("更新用户信息: userId={}, nickname={}", userId, nickname);
+        log.info("更新用户信息: userId={}, nickname={}, changePassword={}", userId, nickname, oldPassword != null);
 
-        boolean result = miniUserService.updateUserInfo(userId, userType, nickname);
+        boolean result = miniUserService.updateUserInfo(userId, userType, nickname, oldPassword, newPassword);
         return Result.success(result);
     }
 

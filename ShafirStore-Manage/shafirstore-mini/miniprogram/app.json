@@ -9,6 +9,7 @@
     "pages/order/detail/detail",
     "pages/member/index/index",
     "pages/member/points/points",
+    "pages/member/settings/settings",
     "pages/member/login/login",
     "pages/member/register/register",
     "pages/store/select/select",

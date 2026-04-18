@@ -119,13 +119,21 @@ public class MiniUserServiceImpl implements MiniUserService {
     }
 
     @Override
-    public boolean updateUserInfo(Long userId, Integer userType, String nickname) {
+    public boolean updateUserInfo(Long userId, Integer userType, String nickname, String oldPassword, String newPassword) {
         if (userType == 1) {
             RegularUser user = regularUserRepository.selectById(userId);
             if (user == null) {
                 throw new BusinessException("用户不存在");
             }
             user.setNickname(nickname);
+            
+            if (oldPassword != null && newPassword != null) {
+                if (!user.getPassword().equals(oldPassword)) {
+                    throw new BusinessException("原密码错误");
+                }
+                user.setPassword(newPassword);
+            }
+            
             return regularUserRepository.updateById(user) > 0;
         } else {
             Member member = memberRepository.selectById(userId);
@@ -133,6 +141,14 @@ public class MiniUserServiceImpl implements MiniUserService {
                 throw new BusinessException("会员不存在");
             }
             member.setName(nickname);
+            
+            if (oldPassword != null && newPassword != null) {
+                if (!member.getPassword().equals(oldPassword)) {
+                    throw new BusinessException("原密码错误");
+                }
+                member.setPassword(newPassword);
+            }
+            
             return memberRepository.updateById(member) > 0;
         }
     }
