@@ -248,7 +248,11 @@ public class MemberServiceImpl implements MemberService {
 
     private void enrichMemberInfo(Member member) {
         if (member.getLevel() != null) {
-            MemberLevel level = memberLevelRepository.selectById(member.getLevel());
+            LambdaQueryWrapper<MemberLevel> levelWrapper = new LambdaQueryWrapper<>();
+            levelWrapper.eq(MemberLevel::getLevel, member.getLevel());
+            levelWrapper.orderByAsc(MemberLevel::getId);
+            levelWrapper.last("LIMIT 1");
+            MemberLevel level = memberLevelRepository.selectOne(levelWrapper);
             if (level != null) {
                 member.setLevelName(level.getName());
             }
@@ -261,7 +265,11 @@ public class MemberServiceImpl implements MemberService {
                 member.setPoints(rel.getPoints());
                 member.setTotalConsume(rel.getTotalConsume());
                 member.setLevel(rel.getLevel());
-                MemberLevel level = memberLevelRepository.selectById(rel.getLevel());
+                LambdaQueryWrapper<MemberLevel> relLevelWrapper = new LambdaQueryWrapper<>();
+                relLevelWrapper.eq(MemberLevel::getLevel, rel.getLevel());
+                relLevelWrapper.orderByAsc(MemberLevel::getId);
+                relLevelWrapper.last("LIMIT 1");
+                MemberLevel level = memberLevelRepository.selectOne(relLevelWrapper);
                 if (level != null) {
                     member.setLevelName(level.getName());
                 }

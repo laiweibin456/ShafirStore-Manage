@@ -225,7 +225,6 @@
               <el-option label="现金" :value="1" />
               <el-option label="微信" :value="2" />
               <el-option label="支付宝" :value="3" />
-              <el-option label="会员卡" :value="4" />
             </el-select>
           </el-form-item>
         </el-form>

@@ -45,7 +45,6 @@
 
       <view class="order-actions" catchtap="">
         <view class="btn-action btn-cancel" wx:if="{{item.status === 1}}" catchtap="cancelOrder" data-id="{{item.id}}">取消预约</view>
-        <view class="btn-action btn-confirm" wx:if="{{item.status === 1}}" catchtap="confirmPickup" data-id="{{item.id}}">确认取货</view>
         <view class="btn-action btn-reorder" wx:if="{{item.status === 2 || item.status === 3}}" catchtap="reorder">再次预定</view>
       </view>
     </view>

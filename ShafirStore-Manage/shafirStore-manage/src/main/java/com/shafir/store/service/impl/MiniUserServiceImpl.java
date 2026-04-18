@@ -34,78 +34,65 @@ public class MiniUserServiceImpl implements MiniUserService {
     @Override
     @Transactional
     public RegularUser register(String phone, String password, String nickname) {
-        LambdaQueryWrapper<RegularUser> phoneWrapper = new LambdaQueryWrapper<>();
-        phoneWrapper.eq(RegularUser::getPhone, phone);
-        if (regularUserRepository.selectCount(phoneWrapper) > 0) {
-            throw new BusinessException("手机号已注册");
-        }
-
         LambdaQueryWrapper<Member> memberPhoneWrapper = new LambdaQueryWrapper<>();
         memberPhoneWrapper.eq(Member::getPhone, phone);
         if (memberRepository.selectCount(memberPhoneWrapper) > 0) {
             throw new BusinessException("手机号已注册");
         }
 
+        Member member = new Member();
+        member.setPhone(phone);
+        member.setPassword(password);
+        member.setName(StringUtils.hasText(nickname) ? nickname : "用户" + phone.substring(phone.length() - 4));
+        member.setTotalConsume(BigDecimal.ZERO);
+        member.setPoints(0);
+        member.setLevel(1);
+        member.setStatus(1);
+        member.setRegisterTime(LocalDateTime.now());
+        member.setUpdateTime(LocalDateTime.now());
+
+        memberRepository.insert(member);
+
         RegularUser user = new RegularUser();
+        user.setId(member.getId());
         user.setPhone(phone);
         user.setPassword(password);
-        user.setNickname(StringUtils.hasText(nickname) ? nickname : "用户" + phone.substring(phone.length() - 4));
+        user.setNickname(member.getName());
         user.setTotalConsume(BigDecimal.ZERO);
         user.setCreateTime(LocalDateTime.now());
         user.setStatus(1);
 
-        regularUserRepository.insert(user);
         return user;
     }
 
     @Override
     public Map<String, Object> login(String phone, String password) {
-        LambdaQueryWrapper<RegularUser> regularWrapper = new LambdaQueryWrapper<>();
-        regularWrapper.eq(RegularUser::getPhone, phone);
-        RegularUser regularUser = regularUserRepository.selectOne(regularWrapper);
-
-        if (regularUser != null) {
-            if (!password.equals(regularUser.getPassword())) {
-                throw new BusinessException("密码错误");
-            }
-            if (regularUser.getStatus() == 0) {
-                throw new BusinessException("账号已被禁用");
-            }
-
-            String token = jwtUtil.generateToken(regularUser.getId(), phone, "regular_user");
-
-            Map<String, Object> result = new HashMap<>();
-            result.put("token", token);
-            result.put("userType", 1);
-
-            Map<String, Object> userInfo = buildRegularUserInfo(regularUser);
-            result.put("userInfo", userInfo);
-
-            return result;
-        }
-
         LambdaQueryWrapper<Member> memberWrapper = new LambdaQueryWrapper<>();
         memberWrapper.eq(Member::getPhone, phone);
         Member member = memberRepository.selectOne(memberWrapper);
 
-        if (member != null) {
-            if (member.getStatus() == 0) {
-                throw new BusinessException("账号已被禁用");
-            }
-
-            String token = jwtUtil.generateToken(member.getId(), phone, "member");
-
-            Map<String, Object> result = new HashMap<>();
-            result.put("token", token);
-            result.put("userType", 2);
-
-            Map<String, Object> userInfo = buildMemberInfo(member);
-            result.put("userInfo", userInfo);
-
-            return result;
+        if (member == null) {
+            throw new BusinessException("用户不存在");
         }
 
-        throw new BusinessException("用户不存在");
+        if (member.getPassword() != null && !password.equals(member.getPassword())) {
+            throw new BusinessException("密码错误");
+        }
+
+        if (member.getStatus() == 0) {
+            throw new BusinessException("账号已被禁用");
+        }
+
+        String token = jwtUtil.generateToken(member.getId(), phone, "member");
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("token", token);
+        result.put("userType", 2);
+
+        Map<String, Object> userInfo = buildMemberInfo(member);
+        result.put("userInfo", userInfo);
+
+        return result;
     }
 
     @Override
@@ -216,7 +203,11 @@ public class MiniUserServiceImpl implements MiniUserService {
         userInfo.put("points", member.getPoints() != null ? member.getPoints() : 0);
 
         if (member.getLevel() != null) {
-            MemberLevel level = memberLevelRepository.selectById(member.getLevel());
+            LambdaQueryWrapper<MemberLevel> levelWrapper = new LambdaQueryWrapper<>();
+            levelWrapper.eq(MemberLevel::getLevel, member.getLevel());
+            levelWrapper.orderByAsc(MemberLevel::getId);
+            levelWrapper.last("LIMIT 1");
+            MemberLevel level = memberLevelRepository.selectOne(levelWrapper);
             if (level != null) {
                 userInfo.put("levelName", level.getName());
                 userInfo.put("discount", level.getDiscount() != null ? level.getDiscount() : 1.0);

@@ -8,7 +8,6 @@ import com.shafir.store.common.exception.BusinessException;
 import com.shafir.store.entity.*;
 import com.shafir.store.repository.*;
 import com.shafir.store.service.InventoryService;
-import com.shafir.store.service.MiniUserService;
 import com.shafir.store.service.ProductService;
 import com.shafir.store.service.ReservationOrderService;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +26,6 @@ public class ReservationOrderServiceImpl implements ReservationOrderService {
     private final ReservationOrderRepository reservationOrderRepository;
     private final ReservationOrderItemRepository reservationOrderItemRepository;
     private final ProductService productService;
-    private final MiniUserService miniUserService;
-    private final RegularUserRepository regularUserRepository;
     private final MemberRepository memberRepository;
     private final MemberLevelRepository memberLevelRepository;
     private final InventoryService inventoryService;
@@ -83,17 +80,20 @@ public class ReservationOrderServiceImpl implements ReservationOrderService {
         }
 
         BigDecimal discount = BigDecimal.ONE;
-        if (userType == 2) {
-            Member member = memberRepository.selectById(userId);
-            if (member != null && member.getLevel() != null) {
-                MemberLevel level = memberLevelRepository.selectById(member.getLevel());
-                if (level != null) {
-                    discount = level.getDiscount();
-                    discountAmount = totalAmount.multiply(BigDecimal.ONE.subtract(discount));
-                    payAmount = totalAmount.multiply(discount);
-                }
+        Member member = memberRepository.selectById(userId);
+        if (member != null && member.getLevel() != null) {
+            LambdaQueryWrapper<MemberLevel> levelWrapper = new LambdaQueryWrapper<>();
+            levelWrapper.eq(MemberLevel::getLevel, member.getLevel());
+            levelWrapper.orderByAsc(MemberLevel::getId);
+            levelWrapper.last("LIMIT 1");
+            MemberLevel level = memberLevelRepository.selectOne(levelWrapper);
+            if (level != null && level.getDiscount() != null) {
+                discount = level.getDiscount();
+                discountAmount = totalAmount.multiply(BigDecimal.ONE.subtract(discount));
+                payAmount = totalAmount.multiply(discount);
             }
-        } else {
+        }
+        if (payAmount.compareTo(BigDecimal.ZERO) == 0) {
             payAmount = totalAmount;
         }
 
@@ -192,52 +192,29 @@ public class ReservationOrderServiceImpl implements ReservationOrderService {
         Integer newLevel = null;
         String newLevelName = null;
 
-        if (order.getUserType() == 1) {
-            RegularUser user = regularUserRepository.selectById(order.getUserId());
-            if (user != null) {
-                BigDecimal newTotalConsume = user.getTotalConsume().add(order.getPayAmount());
+        Member member = memberRepository.selectById(order.getUserId());
+        if (member != null) {
+            BigDecimal newTotalConsume = member.getTotalConsume().add(order.getPayAmount());
+            int newPoints = member.getPoints() + order.getPayAmount().intValue();
 
-                LambdaQueryWrapper<MemberLevel> levelWrapper = new LambdaQueryWrapper<>();
-                levelWrapper.le(MemberLevel::getMinAmount, newTotalConsume);
-                levelWrapper.orderByDesc(MemberLevel::getLevel);
-                levelWrapper.last("LIMIT 1");
-                MemberLevel nextLevel = memberLevelRepository.selectOne(levelWrapper);
+            LambdaQueryWrapper<MemberLevel> levelWrapper = new LambdaQueryWrapper<>();
+            levelWrapper.gt(MemberLevel::getLevel, member.getLevel() != null ? member.getLevel() : 0);
+            levelWrapper.le(MemberLevel::getMinAmount, newTotalConsume);
+            levelWrapper.orderByAsc(MemberLevel::getLevel);
+            levelWrapper.last("LIMIT 1");
+            MemberLevel nextLevel = memberLevelRepository.selectOne(levelWrapper);
 
-                if (nextLevel != null && nextLevel.getLevel() > 1) {
-                    Member member = miniUserService.upgradeToMember(user);
-                    upgraded = true;
-                    newLevel = member.getLevel();
-                    newLevelName = getLevelName(member.getLevel());
-                } else {
-                    user.setTotalConsume(newTotalConsume);
-                    regularUserRepository.updateById(user);
-                }
+            if (nextLevel != null) {
+                member.setLevel(nextLevel.getLevel());
+                upgraded = true;
+                newLevel = nextLevel.getLevel();
+                newLevelName = nextLevel.getName();
             }
-        } else {
-            Member member = memberRepository.selectById(order.getUserId());
-            if (member != null) {
-                BigDecimal newTotalConsume = member.getTotalConsume().add(order.getPayAmount());
-                int newPoints = member.getPoints() + order.getPayAmount().intValue();
 
-                LambdaQueryWrapper<MemberLevel> levelWrapper = new LambdaQueryWrapper<>();
-                levelWrapper.gt(MemberLevel::getLevel, member.getLevel());
-                levelWrapper.le(MemberLevel::getMinAmount, newTotalConsume);
-                levelWrapper.orderByAsc(MemberLevel::getLevel);
-                levelWrapper.last("LIMIT 1");
-                MemberLevel nextLevel = memberLevelRepository.selectOne(levelWrapper);
-
-                if (nextLevel != null) {
-                    member.setLevel(nextLevel.getLevel());
-                    upgraded = true;
-                    newLevel = nextLevel.getLevel();
-                    newLevelName = nextLevel.getName();
-                }
-
-                member.setTotalConsume(newTotalConsume);
-                member.setPoints(newPoints);
-                member.setUpdateTime(LocalDateTime.now());
-                memberRepository.updateById(member);
-            }
+            member.setTotalConsume(newTotalConsume);
+            member.setPoints(newPoints);
+            member.setUpdateTime(LocalDateTime.now());
+            memberRepository.updateById(member);
         }
 
         Map<String, Object> result = new HashMap<>();
@@ -327,52 +304,29 @@ public class ReservationOrderServiceImpl implements ReservationOrderService {
         Integer newLevel = null;
         String newLevelName = null;
 
-        if (order.getUserType() == 1) {
-            RegularUser user = regularUserRepository.selectById(order.getUserId());
-            if (user != null) {
-                BigDecimal newTotalConsume = user.getTotalConsume().add(order.getPayAmount());
+        Member member = memberRepository.selectById(order.getUserId());
+        if (member != null) {
+            BigDecimal newTotalConsume = member.getTotalConsume().add(order.getPayAmount());
+            int newPoints = member.getPoints() + order.getPayAmount().intValue();
 
-                LambdaQueryWrapper<MemberLevel> levelWrapper = new LambdaQueryWrapper<>();
-                levelWrapper.le(MemberLevel::getMinAmount, newTotalConsume);
-                levelWrapper.orderByDesc(MemberLevel::getLevel);
-                levelWrapper.last("LIMIT 1");
-                MemberLevel nextLevel = memberLevelRepository.selectOne(levelWrapper);
+            LambdaQueryWrapper<MemberLevel> levelWrapper = new LambdaQueryWrapper<>();
+            levelWrapper.gt(MemberLevel::getLevel, member.getLevel() != null ? member.getLevel() : 0);
+            levelWrapper.le(MemberLevel::getMinAmount, newTotalConsume);
+            levelWrapper.orderByAsc(MemberLevel::getLevel);
+            levelWrapper.last("LIMIT 1");
+            MemberLevel nextLevel = memberLevelRepository.selectOne(levelWrapper);
 
-                if (nextLevel != null && nextLevel.getLevel() > 1) {
-                    Member member = miniUserService.upgradeToMember(user);
-                    upgraded = true;
-                    newLevel = member.getLevel();
-                    newLevelName = getLevelName(member.getLevel());
-                } else {
-                    user.setTotalConsume(newTotalConsume);
-                    regularUserRepository.updateById(user);
-                }
+            if (nextLevel != null) {
+                member.setLevel(nextLevel.getLevel());
+                upgraded = true;
+                newLevel = nextLevel.getLevel();
+                newLevelName = nextLevel.getName();
             }
-        } else {
-            Member member = memberRepository.selectById(order.getUserId());
-            if (member != null) {
-                BigDecimal newTotalConsume = member.getTotalConsume().add(order.getPayAmount());
-                int newPoints = member.getPoints() + order.getPayAmount().intValue();
 
-                LambdaQueryWrapper<MemberLevel> levelWrapper = new LambdaQueryWrapper<>();
-                levelWrapper.gt(MemberLevel::getLevel, member.getLevel());
-                levelWrapper.le(MemberLevel::getMinAmount, newTotalConsume);
-                levelWrapper.orderByAsc(MemberLevel::getLevel);
-                levelWrapper.last("LIMIT 1");
-                MemberLevel nextLevel = memberLevelRepository.selectOne(levelWrapper);
-
-                if (nextLevel != null) {
-                    member.setLevel(nextLevel.getLevel());
-                    upgraded = true;
-                    newLevel = nextLevel.getLevel();
-                    newLevelName = nextLevel.getName();
-                }
-
-                member.setTotalConsume(newTotalConsume);
-                member.setPoints(newPoints);
-                member.setUpdateTime(LocalDateTime.now());
-                memberRepository.updateById(member);
-            }
+            member.setTotalConsume(newTotalConsume);
+            member.setPoints(newPoints);
+            member.setUpdateTime(LocalDateTime.now());
+            memberRepository.updateById(member);
         }
 
         Map<String, Object> result = new HashMap<>();
@@ -386,29 +340,26 @@ public class ReservationOrderServiceImpl implements ReservationOrderService {
 
     private void enrichOrderInfo(ReservationOrder order) {
         String statusName = switch (order.getStatus()) {
-            case 1 -> "待取货";
+            case 1 -> "待付款";
             case 2 -> "已完成";
             case 3 -> "已取消";
             default -> "未知";
         };
         order.setStatusName(statusName);
 
-        if (order.getUserType() == 1) {
-            RegularUser user = regularUserRepository.selectById(order.getUserId());
-            if (user != null) {
-                order.setUserPhone(maskPhone(user.getPhone()));
-                order.setUserNickname(user.getNickname());
-                order.setMemberLevelName("普通用户");
-            }
-        } else {
-            Member member = memberRepository.selectById(order.getUserId());
-            if (member != null) {
-                order.setUserPhone(maskPhone(member.getPhone()));
-                order.setUserNickname(member.getName());
-                if (member.getLevel() != null) {
-                    MemberLevel level = memberLevelRepository.selectById(member.getLevel());
-                    order.setMemberLevelName(level != null ? level.getName() : "普通用户");
-                }
+        Member member = memberRepository.selectById(order.getUserId());
+        if (member != null) {
+            order.setUserPhone(maskPhone(member.getPhone()));
+            order.setUserNickname(member.getName());
+            if (member.getLevel() != null) {
+                LambdaQueryWrapper<MemberLevel> levelWrapper = new LambdaQueryWrapper<>();
+                levelWrapper.eq(MemberLevel::getLevel, member.getLevel());
+                levelWrapper.orderByAsc(MemberLevel::getId);
+                levelWrapper.last("LIMIT 1");
+                MemberLevel level = memberLevelRepository.selectOne(levelWrapper);
+                order.setMemberLevelName(level != null ? level.getName() : "普通会员");
+            } else {
+                order.setMemberLevelName("普通会员");
             }
         }
     }
@@ -421,9 +372,13 @@ public class ReservationOrderServiceImpl implements ReservationOrderService {
     }
 
     private String getLevelName(Integer level) {
-        if (level == null) return "普通用户";
-        MemberLevel memberLevel = memberLevelRepository.selectById(level);
-        return memberLevel != null ? memberLevel.getName() : "普通用户";
+        if (level == null) return "普通会员";
+        LambdaQueryWrapper<MemberLevel> levelWrapper = new LambdaQueryWrapper<>();
+        levelWrapper.eq(MemberLevel::getLevel, level);
+        levelWrapper.orderByAsc(MemberLevel::getId);
+        levelWrapper.last("LIMIT 1");
+        MemberLevel memberLevel = memberLevelRepository.selectOne(levelWrapper);
+        return memberLevel != null ? memberLevel.getName() : "普通会员";
     }
 
     private String generateOrderNo() {

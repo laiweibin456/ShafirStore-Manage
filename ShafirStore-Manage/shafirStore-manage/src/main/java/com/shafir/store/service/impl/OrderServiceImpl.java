@@ -36,10 +36,10 @@ public class OrderServiceImpl implements OrderService {
     private final MemberPointsRecordRepository memberPointsRecordRepository;
 
     private static final Map<Integer, BigDecimal> DISCOUNT_MAP = Map.of(
-            1, new BigDecimal("0.95"),
-            2, new BigDecimal("0.90"),
-            3, new BigDecimal("0.85"),
-            4, new BigDecimal("0.80")
+            1, new BigDecimal("1.00"),
+            2, new BigDecimal("0.95"),
+            3, new BigDecimal("0.90"),
+            4, new BigDecimal("0.85")
     );
 
     private static final BigDecimal BIRTHDAY_DISCOUNT = new BigDecimal("0.30");
@@ -112,29 +112,19 @@ public class OrderServiceImpl implements OrderService {
         order.setPointsDiscount(BigDecimal.ZERO);
 
         Member member = null;
-        if (payType == 5 && memberId != null && pointsDeduct != null && pointsDeduct > 0) {
-            member = memberRepository.selectById(memberId);
-            if (member == null) {
-                throw new BusinessException("会员不存在");
-            }
-            if (member.getPoints() < pointsDeduct) {
-                throw new BusinessException("积分不足，当前积分：" + member.getPoints() + "，需要：" + pointsDeduct);
-            }
-            order.setTotalAmount(BigDecimal.ZERO);
-            order.setDiscountAmount(totalAmount);
-            order.setPayAmount(BigDecimal.ZERO);
-            order.setPointsDiscount(BigDecimal.valueOf(pointsDeduct));
-        } else if (memberId != null && payType == 4) {
+        if (memberId != null) {
             member = memberRepository.selectById(memberId);
             if (member != null) {
                 BigDecimal discountRate = calculateDiscountRate(member);
-                BigDecimal discountAmount = totalAmount.multiply(BigDecimal.ONE.subtract(discountRate))
-                        .setScale(2, RoundingMode.HALF_UP);
-                BigDecimal payAmount = totalAmount.multiply(discountRate)
-                        .setScale(2, RoundingMode.HALF_UP);
+                if (discountRate.compareTo(BigDecimal.ONE) < 0) {
+                    BigDecimal discountAmount = totalAmount.multiply(BigDecimal.ONE.subtract(discountRate))
+                            .setScale(2, RoundingMode.HALF_UP);
+                    BigDecimal payAmount = totalAmount.multiply(discountRate)
+                            .setScale(2, RoundingMode.HALF_UP);
 
-                order.setDiscountAmount(discountAmount);
-                order.setPayAmount(payAmount);
+                    order.setDiscountAmount(discountAmount);
+                    order.setPayAmount(payAmount);
+                }
             }
         }
 
@@ -153,37 +143,29 @@ public class OrderServiceImpl implements OrderService {
             );
         }
 
-        if (payType == 5 && member != null && pointsDeduct != null && pointsDeduct > 0) {
-            int newPoints = member.getPoints() - pointsDeduct;
-            member.setPoints(newPoints);
+        if (member != null) {
+            int earnedPoints = order.getPayAmount().divide(BigDecimal.TEN, 0, RoundingMode.DOWN).intValue();
             if (member.getTotalConsume() == null) {
                 member.setTotalConsume(BigDecimal.ZERO);
             }
-            member.setTotalConsume(member.getTotalConsume().add(totalAmount));
+            if (member.getPoints() == null) {
+                member.setPoints(0);
+            }
+            BigDecimal newTotalConsume = member.getTotalConsume().add(order.getPayAmount());
+            int newPoints = member.getPoints() + earnedPoints;
+
+            Integer oldLevel = member.getLevel();
+            Integer newLevel = calculateMemberLevel(newTotalConsume);
+            if (newLevel > oldLevel) {
+                member.setLevel(newLevel);
+            }
+
+            member.setTotalConsume(newTotalConsume);
+            member.setPoints(newPoints);
             member.setUpdateTime(LocalDateTime.now());
             memberRepository.updateById(member);
 
-            MemberPointsRecord pointsRecord = new MemberPointsRecord();
-            pointsRecord.setMemberId(member.getId());
-            pointsRecord.setType(2);
-            pointsRecord.setPoints(pointsDeduct);
-            pointsRecord.setBalance(newPoints);
-            pointsRecord.setOrderId(order.getId());
-            pointsRecord.setRemark("积分兑换商品");
-            pointsRecord.setCreateTime(LocalDateTime.now());
-            memberPointsRecordRepository.insert(pointsRecord);
-        } else if (member != null && payType == 4) {
-            int earnedPoints = order.getPayAmount().divide(BigDecimal.TEN, 0, RoundingMode.DOWN).intValue();
             if (earnedPoints > 0) {
-                int newPoints = member.getPoints() + earnedPoints;
-                member.setPoints(newPoints);
-                if (member.getTotalConsume() == null) {
-                    member.setTotalConsume(BigDecimal.ZERO);
-                }
-                member.setTotalConsume(member.getTotalConsume().add(order.getPayAmount()));
-                member.setUpdateTime(LocalDateTime.now());
-                memberRepository.updateById(member);
-
                 MemberPointsRecord pointsRecord = new MemberPointsRecord();
                 pointsRecord.setMemberId(member.getId());
                 pointsRecord.setType(1);
@@ -201,7 +183,7 @@ public class OrderServiceImpl implements OrderService {
 
     private BigDecimal calculateDiscountRate(Member member) {
         Integer level = member.getLevel() != null ? member.getLevel() : 1;
-        BigDecimal discountRate = DISCOUNT_MAP.getOrDefault(level, new BigDecimal("0.95"));
+        BigDecimal discountRate = DISCOUNT_MAP.getOrDefault(level, BigDecimal.ONE);
 
         if (member.getBirthday() != null) {
             LocalDate today = LocalDate.now();
@@ -215,6 +197,17 @@ public class OrderServiceImpl implements OrderService {
         }
 
         return discountRate;
+    }
+
+    private Integer calculateMemberLevel(BigDecimal totalConsume) {
+        if (totalConsume.compareTo(new BigDecimal("5000")) >= 0) {
+            return 4;
+        } else if (totalConsume.compareTo(new BigDecimal("2000")) >= 0) {
+            return 3;
+        } else if (totalConsume.compareTo(new BigDecimal("500")) >= 0) {
+            return 2;
+        }
+        return 1;
     }
 
     @Override

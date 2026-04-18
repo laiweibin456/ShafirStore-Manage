@@ -30,7 +30,7 @@ Page({
 
   getStatusInfo(status) {
     var statusMap = {
-      1: { text: '待取货', color: '#E6A23C' },
+      1: { text: '待付款', color: '#E6A23C' },
       2: { text: '已完成', color: '#67C23A' },
       3: { text: '已取消', color: '#F56C6C' }
     }

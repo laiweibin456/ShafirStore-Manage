@@ -26,6 +26,7 @@ public class MybatisPlusConfig {
             "sys_user",
             "sys_role",
             "member",
+            "member_level",
             "regular_user",
             "member_store_rel",
             "sys_user_store_rel",

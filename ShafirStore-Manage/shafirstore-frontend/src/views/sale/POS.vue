@@ -118,17 +118,11 @@
           </div>
 
           <div class="payment-section">
-            <div class="payment-method">
-              <span class="label">支付方式：</span>
-              <el-radio-group v-model="payType" @change="handlePayTypeChange">
-                <el-radio :value="1">现金</el-radio>
-                <el-radio :value="2">微信</el-radio>
-                <el-radio :value="3">支付宝</el-radio>
-                <el-radio :value="4">会员卡</el-radio>
-              </el-radio-group>
+            <div class="member-toggle">
+              <el-checkbox v-model="hasMember" @change="handleMemberToggle">有会员</el-checkbox>
             </div>
 
-            <div class="member-section" v-if="payType === 4">
+            <div class="member-section" v-if="hasMember">
               <div class="member-input-row">
                 <el-input
                   v-model="memberPhone"
@@ -137,7 +131,6 @@
                   @keyup.enter="handleSearchMember"
                 />
                 <el-button type="primary" @click="handleSearchMember">查询</el-button>
-                <el-button type="success" @click="showPointsExchangeDialog">积分兑换</el-button>
               </div>
               <div v-if="currentMember" class="member-info">
                 <el-tag :type="getLevelTagType(currentMember.level)">
@@ -145,10 +138,20 @@
                 </el-tag>
                 <span class="member-name">{{ currentMember.name }}</span>
                 <span class="member-points">积分: {{ currentMember.points || 0 }}</span>
+                <span class="member-discount">{{ getDiscountText() }}</span>
               </div>
               <div v-else-if="memberSearched" class="member-not-found">
                 未找到该会员
               </div>
+            </div>
+
+            <div class="payment-method">
+              <span class="label">支付方式：</span>
+              <el-radio-group v-model="payType">
+                <el-radio :value="1">现金</el-radio>
+                <el-radio :value="2">微信</el-radio>
+                <el-radio :value="3">支付宝</el-radio>
+              </el-radio-group>
             </div>
 
             <div class="remark-input">
@@ -164,7 +167,7 @@
               type="primary"
               size="large"
               class="submit-btn"
-              :disabled="cartItems.length === 0 || (payType === 4 && !currentMember)"
+              :disabled="cartItems.length === 0"
               :loading="submitting"
               @click="handleSubmitOrder"
             >
@@ -262,6 +265,7 @@ const cartItems = ref([])
 const payType = ref(2)
 const remark = ref('')
 
+const hasMember = ref(false)
 const memberPhone = ref('')
 const memberSearched = ref(false)
 const currentMember = ref(null)
@@ -273,10 +277,10 @@ const loadingExchangeProducts = ref(false)
 const exchangeProducts = ref([])
 
 const discountMap = {
-  1: 0.95,
-  2: 0.90,
-  3: 0.85,
-  4: 0.80
+  1: 1.00,
+  2: 0.95,
+  3: 0.90,
+  4: 0.85
 }
 
 const levelNameMap = {
@@ -296,7 +300,7 @@ const isBirthday = (birthday) => {
 const getMemberDiscount = () => {
   if (!currentMember.value) return 1
   const level = currentMember.value.level || 1
-  let discount = discountMap[level] || 0.95
+  let discount = discountMap[level] || 1
   if (isBirthday(currentMember.value.birthday)) {
     discount = Math.max(0.50, discount - 0.30)
   }
@@ -305,7 +309,7 @@ const getMemberDiscount = () => {
 
 const finalAmount = computed(() => {
   const baseAmount = totalAmount.value
-  if (payType.value === 4 && currentMember.value) {
+  if (currentMember.value) {
     return baseAmount * getMemberDiscount()
   }
   return baseAmount
@@ -314,6 +318,7 @@ const finalAmount = computed(() => {
 const getDiscountText = () => {
   if (!currentMember.value) return ''
   const discount = getMemberDiscount()
+  if (discount >= 1) return ''
   if (isBirthday(currentMember.value.birthday)) {
     return `${(discount * 10).toFixed(1)}折 (生日优惠)`
   }
@@ -448,6 +453,14 @@ const handleClearCart = async () => {
   }
 }
 
+const handleMemberToggle = () => {
+  if (!hasMember.value) {
+    currentMember.value = null
+    memberPhone.value = ''
+    memberSearched.value = false
+  }
+}
+
 const handlePayTypeChange = () => {
   if (payType.value !== 4) {
     currentMember.value = null
@@ -570,18 +583,13 @@ const handleSubmitOrder = async () => {
     return
   }
 
-  if (payType.value === 4 && !currentMember.value) {
-    ElMessage.warning('请先查询会员')
-    return
-  }
-
   submitting.value = true
   try {
     const productIds = cartItems.value.map(item => item.productId)
     const quantities = cartItems.value.map(item => item.quantity)
 
     let pointsEarned = 0
-    if (payType.value === 4) {
+    if (currentMember.value) {
       pointsEarned = Math.floor(finalAmount.value / 10)
     }
 
@@ -594,11 +602,11 @@ const handleSubmitOrder = async () => {
       pointsEarned
     })
 
-    ElMessage.success('订单创建成功！' + (pointsEarned > 0 ? ` 获得 ${pointsEarned} 积分` : ''))
+    ElMessage.success('订单创建成功！' + (pointsEarned > 0 ? ` 会员获得 ${pointsEarned} 积分` : ''))
 
     cartItems.value = []
     remark.value = ''
-    if (payType.value === 4 && currentMember.value) {
+    if (currentMember.value && pointsEarned > 0) {
       const newPoints = (currentMember.value.points || 0) + pointsEarned
       currentMember.value = { ...currentMember.value, points: newPoints }
     }
@@ -841,6 +849,16 @@ onMounted(() => {
   padding-top: 16px;
 }
 
+.member-toggle {
+  margin-bottom: 16px;
+}
+
+.member-toggle :deep(.el-checkbox__label) {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
 .payment-method {
   margin-bottom: 16px;
 }
@@ -888,6 +906,12 @@ onMounted(() => {
 .member-points {
   font-size: 14px;
   color: #e6a23c;
+  font-weight: 600;
+}
+
+.member-discount {
+  font-size: 14px;
+  color: #67c23a;
   font-weight: 600;
 }
 

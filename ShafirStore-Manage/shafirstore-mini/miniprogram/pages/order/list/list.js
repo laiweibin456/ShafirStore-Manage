@@ -1,7 +1,7 @@
 Page({
   data: {
     currentTab: 0,
-    tabs: ['全部', '待取货', '已完成', '已取消'],
+    tabs: ['全部', '待付款', '已完成', '已取消'],
     orders: [],
     loading: false,
     isLoggedIn: false
@@ -47,7 +47,7 @@ Page({
     wx.$request.getReservationOrderList(params)
       .then(function(res) {
         var orders = res.data && res.data.records ? res.data.records : (res.data || [])
-        var statusMap = { 1: '待取货', 2: '已完成', 3: '已取消' }
+        var statusMap = { 1: '待付款', 2: '已完成', 3: '已取消' }
         for (var i = 0; i < orders.length; i++) {
           if (!orders[i].statusText) {
             orders[i].statusText = orders[i].statusName || statusMap[orders[i].status] || '未知'

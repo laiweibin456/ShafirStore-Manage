@@ -30,7 +30,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        String requestUri = request.getRequestURI();
         try {
             String token = extractToken(request);
 
@@ -41,9 +40,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Long storeId = jwtUtil.getStoreIdFromToken(token);
                 List<Long> storeIds = jwtUtil.getStoreIdsFromToken(token);
 
-                log.info("[JWT] uri={}, userId={}, role={}, storeId={}, storeIds={}", 
-                        requestUri, userId, role, storeId, storeIds);
-
                 SecurityUser securityUser = new SecurityUser(userId, username, role, storeId, storeIds,
                         Collections.singletonList(new SimpleGrantedAuthority(role)));
 
@@ -53,13 +49,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
                 Long targetStoreId = resolveStoreId(securityUser, request);
-                log.info("[JWT] uri={}, targetStoreId={}, X-Store-Id header={}", 
-                        requestUri, targetStoreId, request.getHeader("X-Store-Id"));
                 if (targetStoreId != null) {
                     StoreContext.setCurrentStoreId(targetStoreId);
                 }
-            } else {
-                log.info("[JWT] uri={}, 无有效token", requestUri);
             }
         } catch (Exception e) {
             log.error("JWT 认证失败: {}", e.getMessage());

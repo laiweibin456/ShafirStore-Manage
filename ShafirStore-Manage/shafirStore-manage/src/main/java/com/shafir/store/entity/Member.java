@@ -29,6 +29,8 @@ public class Member implements Serializable {
 
     private Integer level;
 
+    private String password;
+
     private Integer status;
 
     private LocalDateTime registerTime;
