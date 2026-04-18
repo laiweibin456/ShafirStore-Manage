@@ -17,31 +17,19 @@
   <view class="bottom-section">
     <!-- 用户信息卡片 -->
     <view class="user-card" bindtap="goToMember">
-      <view class="user-left">
-        <view class="user-avatar">
-          <image wx:if="{{userInfo.avatarUrl}}" src="{{userInfo.avatarUrl}}" mode="aspectFill"></image>
-          <text wx:else>LE</text>
-        </view>
-        <view class="user-greeting">
-          <text class="greeting-text">Hi {{userInfo.nickName || '你好'}}</text>
-          <view class="member-tag">
-            <text class="tag-text">{{memberInfo.levelName || '普通会员'}}</text>
-          </view>
-        </view>
+      <view class="user-avatar">
+        <text>{{userInfo.avatarText}}</text>
       </view>
-      <view class="user-stats">
-        <view class="stat-item">
-          <text class="stat-value">{{memberInfo.balance || 0}}</text>
-          <text class="stat-label">余额</text>
-        </view>
-        <view class="stat-item">
-          <text class="stat-value">{{memberInfo.points || 0}}</text>
-          <text class="stat-label">积分</text>
-        </view>
-        <view class="stat-item">
-          <text class="stat-value">{{memberInfo.coupons || 1}}</text>
-          <text class="stat-label">优惠券</text>
-        </view>
+      <view class="user-info">
+        <text class="user-name">{{userInfo.nickname || '未登录'}}</text>
+        <text class="greeting-text">Hi {{userInfo.nickname || '你好'}}</text>
+      </view>
+      <view class="member-tag">
+        <text class="tag-text">{{memberInfo.levelName || '普通会员'}}</text>
+      </view>
+      <view class="stat-item stat-points">
+        <text class="stat-value">{{memberInfo.points || 0}}</text>
+        <text class="stat-label">积分</text>
       </view>
     </view>
 

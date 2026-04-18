@@ -3,8 +3,8 @@ var app = getApp()
 Page({
   data: {
     userInfo: {
-      nickName: '',
-      avatarUrl: ''
+      nickname: '',
+      avatarText: 'LE'
     },
     memberInfo: {
       levelName: '普通会员',
@@ -40,12 +40,20 @@ Page({
     var userInfo = wx.getStorageSync('userInfo')
     var token = wx.getStorageSync('token')
     if (userInfo && token) {
+      var nickname = userInfo.nickname || userInfo.name || ''
       this.setData({
-        userInfo: userInfo,
+        userInfo: {
+          nickname: nickname,
+          avatarText: nickname ? nickname.substring(0, 1) : 'LE'
+        },
         hasUserInfo: true
       })
     } else {
       this.setData({
+        userInfo: {
+          nickname: '',
+          avatarText: 'LE'
+        },
         hasUserInfo: false
       })
     }
@@ -59,20 +67,20 @@ Page({
     wx.$request.getMiniUserInfo()
       .then(function(res) {
         if (res.data) {
-          var userType = res.data.userType
-          var levelName = '普通会员'
-          if (userType === 2) {
-            levelName = 'VIP会员'
-          }
+          var nickname = res.data.nickname || ''
           that.setData({
+            userInfo: {
+              nickname: nickname,
+              avatarText: nickname ? nickname.substring(0, 1) : 'LE'
+            },
             memberInfo: {
-              levelName: levelName,
+              levelName: res.data.levelName || '普通会员',
               balance: res.data.balance || 0,
               points: res.data.points || 0,
               coupons: res.data.coupons || 0
             }
           })
-          wx.setStorageSync('userType', userType)
+          wx.setStorageSync('userType', res.data.level > 1 ? 2 : 1)
           wx.setStorageSync('userInfo', res.data)
         }
       })
