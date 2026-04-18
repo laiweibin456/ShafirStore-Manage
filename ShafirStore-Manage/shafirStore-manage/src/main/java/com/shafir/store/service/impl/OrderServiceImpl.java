@@ -328,6 +328,14 @@ public class OrderServiceImpl implements OrderService {
         LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
         itemWrapper.eq(OrderItem::getOrderId, id);
         List<OrderItem> items = orderItemRepository.selectList(itemWrapper);
+        
+        for (OrderItem item : items) {
+            Product product = productRepository.selectById(item.getProductId());
+            if (product != null) {
+                item.setImageUrl(product.getImageUrl());
+            }
+        }
+        
         order.setItems(items);
 
         return order;

@@ -35,4 +35,7 @@ public class ReservationOrderItem implements Serializable {
     private Integer requiredPoints;
 
     private LocalDateTime createTime;
+
+    @TableField(exist = false)
+    private String imageUrl;
 }

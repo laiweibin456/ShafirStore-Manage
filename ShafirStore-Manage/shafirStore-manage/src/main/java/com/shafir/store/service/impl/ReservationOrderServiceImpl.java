@@ -27,6 +27,7 @@ public class ReservationOrderServiceImpl implements ReservationOrderService {
     private final ReservationOrderRepository reservationOrderRepository;
     private final ReservationOrderItemRepository reservationOrderItemRepository;
     private final ProductService productService;
+    private final ProductRepository productRepository;
     private final MemberRepository memberRepository;
     private final MemberLevelRepository memberLevelRepository;
     private final MemberPointsRecordRepository memberPointsRecordRepository;
@@ -212,6 +213,12 @@ public class ReservationOrderServiceImpl implements ReservationOrderService {
         for (ReservationOrder order : orders) {
             enrichOrderInfo(order);
             List<ReservationOrderItem> items = getOrderItems(order.getId());
+            for (ReservationOrderItem item : items) {
+                Product product = productRepository.selectById(item.getProductId());
+                if (product != null) {
+                    item.setImageUrl(product.getImageUrl());
+                }
+            }
             order.setItems(items);
         }
 
@@ -230,6 +237,14 @@ public class ReservationOrderServiceImpl implements ReservationOrderService {
         LambdaQueryWrapper<ReservationOrderItem> itemWrapper = new LambdaQueryWrapper<>();
         itemWrapper.eq(ReservationOrderItem::getOrderId, orderId);
         List<ReservationOrderItem> items = reservationOrderItemRepository.selectList(itemWrapper);
+        
+        for (ReservationOrderItem item : items) {
+            Product product = productRepository.selectById(item.getProductId());
+            if (product != null) {
+                item.setImageUrl(product.getImageUrl());
+            }
+        }
+        
         order.setItems(items);
 
         return order;

@@ -21,11 +21,15 @@
 
       <view class="order-products">
         <view class="product-item" wx:for="{{item.items}}" wx:for-item="product" wx:key="id">
-          <image class="product-image" src="{{product.imageUrl || product.productImage || '/images/placeholder.jpg'}}" mode="aspectFill" />
+          <image class="product-image" src="{{product.imageUrl || '/images/placeholder.jpg'}}" mode="aspectFill" />
           <view class="product-info">
             <text class="product-name">{{product.productName || product.name}}</text>
+            <view wx:if="{{product.isPointsExchange}}" class="points-exchange-tag">
+              <text>积分兑换</text>
+            </view>
             <view class="product-bottom">
-              <text class="product-price">¥{{product.price || product.productPrice}}</text>
+              <text class="product-price {{product.isPointsExchange ? 'points-price' : ''}}">¥{{product.price !== undefined ? product.price : product.productPrice}}</text>
+              <text wx:if="{{product.isPointsExchange && product.requiredPoints}}" class="points-cost">({{product.requiredPoints}}积分)</text>
               <text class="product-qty">x{{product.quantity}}</text>
             </view>
           </view>

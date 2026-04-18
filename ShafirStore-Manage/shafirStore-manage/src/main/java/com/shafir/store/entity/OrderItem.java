@@ -38,4 +38,7 @@ public class OrderItem implements Serializable {
 
     @TableField(exist = false)
     private String unit;
+
+    @TableField(exist = false)
+    private String imageUrl;
 }

@@ -26,14 +26,14 @@
   <view class="section">
     <view class="section-title">预定商品</view>
     <view class="product-item" wx:for="{{order.items}}" wx:key="id">
-      <image class="product-image" src="{{item.imageUrl || item.productImage || '/images/placeholder.jpg'}}" mode="aspectFill" />
+      <image class="product-image" src="{{item.imageUrl || '/images/placeholder.jpg'}}" mode="aspectFill" />
       <view class="product-info">
         <text class="product-name">{{item.productName || item.name}}</text>
         <view wx:if="{{item.isPointsExchange}}" class="points-exchange-tag">
           <text>积分兑换</text>
         </view>
         <view class="product-bottom">
-          <text class="product-price {{item.isPointsExchange ? 'points-price' : ''}}">¥{{item.price || item.productPrice}}</text>
+          <text class="product-price {{item.isPointsExchange ? 'points-price' : ''}}">¥{{item.price !== undefined ? item.price : item.productPrice}}</text>
           <text wx:if="{{item.isPointsExchange && item.requiredPoints}}" class="points-cost">({{item.requiredPoints}}积分)</text>
           <text wx:if="{{item.originalPrice}}" class="original-price">原价: ¥{{item.originalPrice}}</text>
           <text class="product-qty">x{{item.quantity}}</text>
