@@ -27,7 +27,7 @@ spring:
       max-request-size: 10MB
 
 upload:
-  path: C:/Users/Administrator/Desktop/宝宝的毕业设计/ShafirStore-Manage/nginx-1.28.3/images/products
+  path: ../nginx-1.28.3/images/products
   base-url: http://localhost:8081/images/products
 
 mybatis-plus:
