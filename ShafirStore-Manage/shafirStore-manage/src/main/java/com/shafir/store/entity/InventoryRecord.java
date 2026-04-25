@@ -31,10 +31,9 @@ public class InventoryRecord implements Serializable {
 
     private String remark;
 
-    private LocalDateTime createTime;
-
-    @TableField(exist = false)
     private String productName;
+
+    private LocalDateTime createTime;
 
     @TableField(exist = false)
     private String operatorName;

@@ -167,13 +167,22 @@ public class InventoryServiceImpl implements InventoryService {
 
         List<InventoryRecord> records = resultPage.getRecords();
         if (records != null && !records.isEmpty()) {
-            List<Long> productIds = records.stream().map(InventoryRecord::getProductId).collect(Collectors.toList());
-            List<Product> products = productRepository.selectBatchIds(productIds);
-            Map<Long, String> productMap = products.stream()
-                    .collect(Collectors.toMap(Product::getId, Product::getName));
+            List<Long> productIds = records.stream()
+                    .filter(r -> r.getProductName() == null || r.getProductName().isEmpty())
+                    .map(InventoryRecord::getProductId)
+                    .distinct()
+                    .collect(Collectors.toList());
+            
+            if (!productIds.isEmpty()) {
+                List<Product> products = productRepository.selectBatchIds(productIds);
+                Map<Long, String> productMap = products.stream()
+                        .collect(Collectors.toMap(Product::getId, Product::getName));
 
-            for (InventoryRecord record : records) {
-                record.setProductName(productMap.get(record.getProductId()));
+                for (InventoryRecord record : records) {
+                    if (record.getProductName() == null || record.getProductName().isEmpty()) {
+                        record.setProductName(productMap.get(record.getProductId()));
+                    }
+                }
             }
         }
 
@@ -194,6 +203,12 @@ public class InventoryServiceImpl implements InventoryService {
                     inv.setUnit(product.getUnit());
                     inv.setPrice(product.getPrice());
                     inv.setIsLowStock(true);
+                    if (product.getCategoryId() != null) {
+                        ProductCategory category = categoryRepository.selectById(product.getCategoryId());
+                        if (category != null) {
+                            inv.setCategoryName(category.getName());
+                        }
+                    }
                 }
                 lowStockList.add(inv);
             }
@@ -224,6 +239,12 @@ public class InventoryServiceImpl implements InventoryService {
                 if (product.getPrice() != null && inv.getQuantity() != null) {
                     inv.setStockValue(product.getPrice().multiply(BigDecimal.valueOf(inv.getQuantity())));
                 }
+                if (product.getCategoryId() != null) {
+                    ProductCategory category = categoryRepository.selectById(product.getCategoryId());
+                    if (category != null) {
+                        inv.setCategoryName(category.getName());
+                    }
+                }
             }
             result.add(inv);
         }
@@ -249,6 +270,7 @@ public class InventoryServiceImpl implements InventoryService {
 
     private void saveRecord(Long productId, Integer type, Integer quantity, int beforeQuantity, int afterQuantity,
                            Long orderId, Long operatorId, String remark) {
+        Product product = productRepository.selectById(productId);
         InventoryRecord record = new InventoryRecord();
         record.setStoreId(StoreContext.getCurrentStoreId());
         record.setProductId(productId);
@@ -259,6 +281,9 @@ public class InventoryServiceImpl implements InventoryService {
         record.setOrderId(orderId);
         record.setOperatorId(operatorId);
         record.setRemark(remark);
+        if (product != null) {
+            record.setProductName(product.getName());
+        }
         inventoryRecordRepository.insert(record);
     }
 }
