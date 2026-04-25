@@ -5,8 +5,10 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.shafir.store.common.context.StoreContext;
 import com.shafir.store.entity.Inventory;
+import com.shafir.store.entity.InventoryRecord;
 import com.shafir.store.entity.Product;
 import com.shafir.store.entity.ProductCategory;
+import com.shafir.store.repository.InventoryRecordRepository;
 import com.shafir.store.repository.InventoryRepository;
 import com.shafir.store.repository.ProductCategoryRepository;
 import com.shafir.store.repository.ProductRepository;
@@ -26,6 +28,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final ProductCategoryRepository categoryRepository;
     private final InventoryRepository inventoryRepository;
+    private final InventoryRecordRepository inventoryRecordRepository;
 
     @Override
     public IPage<Product> selectPage(Integer pageNum, Integer pageSize, String name, Long categoryId, Integer status) {
@@ -102,7 +105,16 @@ public class ProductServiceImpl implements ProductService {
         if (product.getStoreId() == null) {
             product.setStoreId(StoreContext.getCurrentStoreId());
         }
-        return productRepository.insert(product) > 0;
+        int result = productRepository.insert(product);
+        if (result > 0) {
+            Inventory inventory = new Inventory();
+            inventory.setStoreId(product.getStoreId());
+            inventory.setProductId(product.getId());
+            inventory.setQuantity(0);
+            inventory.setAlertThreshold(10);
+            inventoryRepository.insert(inventory);
+        }
+        return result > 0;
     }
 
     @Override
@@ -114,6 +126,12 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public boolean deleteProduct(Long id) {
+        inventoryRepository.delete(
+                new LambdaQueryWrapper<Inventory>().eq(Inventory::getProductId, id)
+        );
+        inventoryRecordRepository.delete(
+                new LambdaQueryWrapper<InventoryRecord>().eq(InventoryRecord::getProductId, id)
+        );
         return productRepository.deleteById(id) > 0;
     }
 
